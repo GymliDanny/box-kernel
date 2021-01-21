@@ -1,5 +1,6 @@
 #include <kernel/io.h>
 #include <kernel/string.h>
+#include <kernel/tty.h>
 
 char* convert(unsigned int num, int base) {
         static char rep[] = "0123456789ABCDEF";
@@ -18,19 +19,18 @@ char* convert(unsigned int num, int base) {
 }
 
 int vprintf(const char *fmt, va_list args) {
-        char *traverse;
         char *s;
         int i;
 
-        for (traverse = fmt; *traverse != '\0'; traverse++) {
-                if (*traverse != '%') {
-                        tty_putchar(*traverse);
+        for (size_t n = 0; n < strlen(fmt); n++) {
+                if (fmt[n] != '%') {
+                        tty_putchar(fmt[n]);
                         continue;
                 } else {
-                        traverse++;
+                        n++;
                 }
 
-                switch (*traverse) {
+                switch (fmt[n]) {
                         case 'c':
                                 i = va_arg(args, int);
                                 tty_putchar(i);
