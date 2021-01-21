@@ -1,8 +1,8 @@
 #include <kernel/string.h>
 
 int memcmp(const void *str1, const void *str2, size_t n) {
-        unsigned char *p1 = str1;
-        unsigned char *p2 = str2;
+        unsigned char const *p1 = str1;
+        unsigned char const *p2 = str2;
         int ret = 0;
 
         if (str1 == str2)
