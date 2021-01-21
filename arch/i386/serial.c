@@ -1,4 +1,6 @@
 #include <kernel/serial.h>
+#include <kernel/string.h>
+#include <stddef.h>
 #include "pic.h"
 
 #define PORT 0x3f8
@@ -37,4 +39,9 @@ int is_transmit_empty(void) {
 void write_serial(char a) {
         while (is_transmit_empty() == 0);
         outb(PORT, a);
+}
+
+void serial_writestring(const char *str) {
+        for (size_t i = 0; i < strlen(str); i++)
+                write_serial(str[i]);
 }
