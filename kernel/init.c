@@ -3,5 +3,6 @@
 
 void kernel_main(void) {
         tty_init();
-        printf("Hello world %x", 100);
+        serial_init();
+        printf("Hello world\n");
 }
