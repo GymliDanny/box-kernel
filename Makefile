@@ -1,9 +1,11 @@
 CC=i686-elf-gcc
+INCLUDE?=include
 CFLAGS?=-O2 -g
 LDFLAGS?=
 LIBS?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Iinclude
+INCLUDE:=$(INCLUDE)
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -I$(INCLUDE)
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lgcc
 
@@ -11,7 +13,8 @@ ARCHDIR=arch/i386
 
 include $(ARCHDIR)/make.config
 
-CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
+INCLUDE:=$(INCLUDE) $(KERNEL_ARCH_INCLUDE)
+CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS) -I$(INCLUDE)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
@@ -22,19 +25,19 @@ KERNEL_OBJS=$(KERNEL_ARCH_OBJS) \
 	    kernel/string.o \
 	    kernel/io.o \
 
-OBJS=$(ARCHDIR)/crti.o \
+OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/crtbegin.o \
      $(KERNEL_OBJS) \
      $(ARCHDIR)/crtend.o \
-     $(ARCHDIR)/crtn.o \
+     $(ARCHDIR)/boot/crtn.o \
 
 LINK_LIST=$(LDFLAGS) \
-	  $(ARCHDIR)/crti.o \
+	  $(ARCHDIR)/boot/crti.o \
 	  $(ARCHDIR)/crtbegin.o \
 	  $(KERNEL_OBJS) \
 	  $(LIBS) \
 	  $(ARCHDIR)/crtend.o \
-	  $(ARCHDIR)/crtn.o \
+	  $(ARCHDIR)/boot/crtn.o \
 
 .PHONY: all clean install install-headers install-kernel
 .SUFFIXES: .o .c .s
@@ -42,7 +45,7 @@ LINK_LIST=$(LDFLAGS) \
 all: $(KERNEL)
 
 $(KERNEL): $(OBJS) $(ARCHDIR)/linker.ld
-	@$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	@$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(LINK_LIST)
 	@echo [LD] $@
 
 $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
@@ -54,7 +57,7 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 
 .s.o:
 	@$(CC) -MD -c $< -o $@ $(CFLAGS)
-	@echo [CC] $@
+	@echo [AS] $@
 
 clean:
 	$(RM) $(KERNEL)
