@@ -37,6 +37,13 @@ void tty_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
 
 void tty_putchar(char c) {
         unsigned char uc = c;
+        switch (uc) {
+                case '\n':
+                        terminal_column = 0;
+                        terminal_row++;
+                        return;
+        }
+
         tty_putentryat(uc, terminal_color, terminal_column, terminal_row);
         if (++terminal_column == VGA_WIDTH) {
                 terminal_column = 0;
