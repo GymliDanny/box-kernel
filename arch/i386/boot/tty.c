@@ -35,20 +35,35 @@ void tty_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
         terminal_buffer[index] = vga_entry(c, color);
 }
 
+void terminal_scroll(void) {
+        for (size_t i = 0; i < VGA_HEIGHT; i++) {
+                for (size_t j = 0; j < VGA_WIDTH; j++)
+                        terminal_buffer[i * VGA_WIDTH + j] = terminal_buffer[(i+1) * VGA_WIDTH + j];
+        }
+}
+
 void tty_putchar(char c) {
-        unsigned char uc = c;
+        unsigned char uc;
+
+        uc = c;
         switch (uc) {
                 case '\n':
                         terminal_column = 0;
-                        terminal_row++;
-                        return;
-        }
-
-        tty_putentryat(uc, terminal_color, terminal_column, terminal_row);
-        if (++terminal_column == VGA_WIDTH) {
-                terminal_column = 0;
-                if (++terminal_row == VGA_HEIGHT)
-                        terminal_row = 0;
+                        if (++terminal_row == VGA_HEIGHT) {
+                                terminal_row--;
+                                terminal_scroll();
+                        }
+                        break;
+                default:
+                        tty_putentryat(uc, terminal_color, terminal_column, terminal_row);
+                        if (++terminal_column == VGA_WIDTH) {
+                                terminal_column = 0;
+                                if (++terminal_row == VGA_HEIGHT) {
+                                        terminal_row--;
+                                        terminal_scroll();
+                                }
+                        }
+                        break;
         }
 }
 
