@@ -6,6 +6,7 @@ written in C with a small portion written in assembly.
 ## Compiling
 
 You will need the following to compile the Box kernel:
+
 * i686-elf toolchain
 * A working Unix environment
 
