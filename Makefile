@@ -72,3 +72,5 @@ install-headers:
 install-kernel: $(KERNEL)
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(KERNEL) $(DESTDIR)$(BOOTDIR)
+
+-include $(OBJS:.o=.d)
