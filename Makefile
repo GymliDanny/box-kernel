@@ -1,13 +1,16 @@
 CC=i686-elf-gcc
-INCLUDE?=include
-CFLAGS?=-O2 -g
-LDFLAGS?=
-LIBS?=
+INCLUDE?=-Iinclude
+CFLAGS?=-O2 -ffreestanding -std=gnu11 
+LDFLAGS?=-nostdlib
+LIBS?=-lgcc
 
+# -- Do not edit below this line --
+
+VERSION:="$(shell git describe --abbrev=4 --dirty --always --tags)"
 INCLUDE:=$(INCLUDE)
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -I$(INCLUDE)
+CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lgcc
+LIBS:=$(LIBS)
 
 ARCHDIR=arch/i386
 
@@ -51,11 +54,11 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	@OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
 .c.o:
-	@$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS)
+	@$(CC) -MD -c $< -o $@ $(CFLAGS) $(INCLUDE)
 	@echo [CC] $@
 
 .s.o:
-	@$(CC) -MD -c $< -o $@ $(CFLAGS)
+	@$(CC) -MD -c $< -o $@ $(CFLAGS) $(INCLUDE)
 	@echo [AS] $@
 
 clean:
