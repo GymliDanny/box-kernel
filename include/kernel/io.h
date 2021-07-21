@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-int vprintf(const char *fmt, va_list args);
-int printf(const char *fmt, ...);
+int vkprintf(const char *fmt, va_list args);
+int kprintf(const char *fmt, ...);
 
 #endif

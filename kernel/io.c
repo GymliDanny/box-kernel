@@ -18,7 +18,7 @@ char* convert(unsigned int num, int base) {
         return ptr;
 }
 
-int vprintf(const char *fmt, va_list args) {
+int vkprintf(const char *fmt, va_list args) {
         char *s;
         int i;
 
@@ -60,12 +60,12 @@ int vprintf(const char *fmt, va_list args) {
         return 0;
 }
 
-int printf(const char *fmt, ...) {
+int kprintf(const char *fmt, ...) {
         va_list args;
         int done;
 
         va_start(args, fmt);
-        done = vprintf(fmt, args);
+        done = vkprintf(fmt, args);
         va_end(args);
 
         return done;
