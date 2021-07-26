@@ -1,4 +1,3 @@
-#include <kernel/io.h>
 #include <stdint.h>
 
 #define SEG_DESCTYPE(x)  ((x) << 0x04) // Descriptor type (0 for system, 1 for code/data)
@@ -26,21 +25,21 @@
 #define SEG_CODE_EXRDC     0x0E // Execute/Read, conforming
 #define SEG_CODE_EXRDCA    0x0F // Execute/Read, conforming, accessed
  
-#define GDT_CODE_PL0    SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
-                        SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
-                        SEG_PRIV(0)     | SEG_CODE_EXRD
+#define GDT_CODE_PL0    (SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
+                         SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
+                         SEG_PRIV(0)     | SEG_CODE_EXRD)
  
-#define GDT_DATA_PL0    SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
-                        SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
-                        SEG_PRIV(0)     | SEG_DATA_RDWR
+#define GDT_DATA_PL0    (SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
+                         SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
+                         SEG_PRIV(0)     | SEG_DATA_RDWR)
  
-#define GDT_CODE_PL3    SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
-                        SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
-                        SEG_PRIV(3)     | SEG_CODE_EXRD
+#define GDT_CODE_PL3    (SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
+                         SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
+                         SEG_PRIV(3)     | SEG_CODE_EXRD)
  
-#define GDT_DATA_PL3    SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
-                        SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
-                        SEG_PRIV(3)     | SEG_DATA_RDWR
+#define GDT_DATA_PL3    (SEG_DESCTYPE(1) | SEG_PRES(1) | SEG_SAVL(0) | \
+                         SEG_LONG(0)     | SEG_SIZE(1) | SEG_GRAN(1) | \
+                         SEG_PRIV(3)     | SEG_DATA_RDWR)
 
 struct gpt_ptr {
         uint16_t limit;
@@ -73,7 +72,7 @@ void gdt_install(void) {
         gp.base = (uint32_t)&desc;
 
         desc[0] = create_gdt_entry(0, 0, 0);
-        desc[1] = create_gdt_entry(0, 0x000FFFFF, (GDT_CODE_PL0));
-        desc[2] = create_gdt_entry(0, 0x000FFFFF, (GDT_DATA_PL0));
+        desc[1] = create_gdt_entry(0, 0x000FFFFF, GDT_CODE_PL0);
+        desc[2] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL0);
         flush_gdt(&gp);
 }
