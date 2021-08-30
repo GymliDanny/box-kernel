@@ -3,6 +3,6 @@
 #include <kernel/serial.h>
 
 void kernel_main(void) {
-        //tty_init();
+        tty_init();
         kprintf("Hello world\n");
 }

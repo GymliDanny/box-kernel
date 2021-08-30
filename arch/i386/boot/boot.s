@@ -68,8 +68,9 @@ _start:
 
         movl $stack_top, %esp
 
-        call tty_init
         call gdt_install
+        call idt_install
+
         call kernel_main
 
         cli
