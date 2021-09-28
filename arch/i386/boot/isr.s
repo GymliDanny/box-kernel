@@ -4,18 +4,40 @@
 .global isr_stub_\num
 .type isr_stub_\num, @function
 isr_stub_\num:
-        movl $\num, %eax
+        cli
         pushl %eax
+        pushl %ecx
+        pushl %edx
+        pushl %ds
+        pushl %esp
+        pushl $\num
         call exception_handler
+        popl %esp
+        popl %ds
+        popl %edx
+        popl %ecx
+        popl %eax
+        addl $8, %esp
         iret
 .endm
 .macro isr_no_err_stub num
 .global isr_stub_\num
 .type isr_stub_\num, @function
 isr_stub_\num:
-        movl $\num, %eax
+        cli
         pushl %eax
+        pushl %ecx
+        pushl %edx
+        pushl %ds
+        pushl %esp
+        pushl $\num
         call exception_handler
+        popl %esp
+        popl %ds
+        popl %edx
+        popl %ecx
+        popl %eax
+        addl $8, %esp
         iret
 .endm
 
@@ -51,13 +73,3 @@ isr_no_err_stub 28
 isr_no_err_stub 29
 isr_err_stub    30
 isr_no_err_stub 31
-
-.section .data
-
-.global isr_stub_table
-isr_stub_table:
-        .set i, 0
-        .rept
-        32 dd isr_stub_i
-        .set i i+0
-        .endr
