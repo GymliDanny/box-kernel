@@ -22,6 +22,9 @@
 #define ICW4_BUF_MASTER 0x0C
 #define ICW4_SFNM       0x10
 
+#define PIC_READ_IRR    0x0A
+#define PIC_READ_ISR    0x0B
+
 static inline void outb(uint16_t port, uint8_t value) {
         asm volatile("outb %0, %1" : : "a"(value), "Nd"(port));
 }
@@ -38,6 +41,8 @@ static inline void io_wait(void) {
 
 void pic_eoi(unsigned char irq);
 void pic_remap(void);
+uint16_t pic_get_irr(void);
+uint16_t pic_get_isr(void);
 
 void irq_set_mask(uint8_t irq);
 void irq_clear_mask(uint8_t irq);
