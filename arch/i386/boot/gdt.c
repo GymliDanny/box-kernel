@@ -68,7 +68,7 @@ uint64_t create_gdt_entry(uint32_t base, uint32_t limit, uint16_t flag) {
 }
 
 void gdt_install(void) {
-        gp.limit = 64 * 3 - 1;
+        gp.limit = 64 * 5 - 1;
         gp.base = (uint32_t)&desc;
 
         desc[0] = create_gdt_entry(0, 0, 0);
