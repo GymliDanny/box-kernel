@@ -1,6 +1,6 @@
 CC=i686-elf-gcc
 INCLUDE?=-Iinclude
-CFLAGS?=-O2 -ffreestanding -std=gnu11 
+CFLAGS?=-O2 -ffreestanding -std=gnu11
 LDFLAGS?=-nostdlib
 LIBS?=-lgcc
 

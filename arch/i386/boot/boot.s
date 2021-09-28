@@ -45,7 +45,7 @@ _start:
         loop 1b
 
 3:      movl $(0x000B8000 | 0x003), boot_page_table0 - 0xC0000000 + 1023 * 4
-        
+
         movl $(boot_page_table0 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000
         movl $(boot_page_table0 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 768 * 4
 
@@ -70,6 +70,7 @@ _start:
 
         call gdt_install
         call idt_install
+        call pic_remap
 
         call kernel_main
 

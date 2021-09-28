@@ -1,7 +1,7 @@
 #include <kernel/serial.h>
+#include <kernel/pic.h>
 #include <kernel/string.h>
 #include <stddef.h>
-#include "pic.h"
 
 #define PORT 0x3f8
 
