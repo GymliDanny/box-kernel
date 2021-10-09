@@ -4,42 +4,74 @@
 .global isr_stub_\num
 .type isr_stub_\num, @function
 isr_stub_\num:
-        cli
-        pushl %eax
-        pushl %ecx
-        pushl %edx
-        pushl %ds
-        pushl %esp
         pushl $\num
-        call exception_handler
-        popl %esp
-        popl %ds
-        popl %edx
-        popl %ecx
-        popl %eax
-        addl $8, %esp
-        iret
+        jmp isr_frame_asm
 .endm
 .macro isr_no_err_stub num
 .global isr_stub_\num
 .type isr_stub_\num, @function
 isr_stub_\num:
-        cli
+        pushl $0
+        pushl $\num
+        jmp isr_frame_asm
+.endm
+
+isr_frame_asm:
+        pushl %ebp
+        movl %esp, %ebp
         pushl %eax
+        pushl %ebx
+        pushl %ecx
         pushl %ecx
         pushl %edx
-        pushl %ds
-        pushl %esp
-        pushl $\num
+        pushl %esi
+        pushl %edi
+
+        movl %cr0, %eax
+        pushl %eax
+        movl %cr2, %eax
+        pushl %eax
+        movl %cr3, %eax
+        pushl %eax
+        movl %cr4, %eax
+        pushl %eax
+
+        movw %ds, %ax
+        pushl %eax
+        pushl $0
+        movw $0x10, %ax
+        movw %ax, %ds
+        movw %ax, %es
+        movw %ax, %ss
+
+        lea 0xC(%esp), %edi
+        pushl %edi
         call exception_handler
-        popl %esp
-        popl %ds
+
+        popl %eax
+        popl %eax
+        movw %ax, %ds
+        movw %ax, %es
+
+        popl %eax
+        movl %eax, %cr4
+        popl %eax
+        movl %eax, %cr3
+        popl %eax
+        movl %eax, %cr2
+        popl %eax
+        movl %eax, %cr0
+
+        popl %edi
+        popl %esi
         popl %edx
         popl %ecx
+        popl %ebx
         popl %eax
-        addl $8, %esp
+
+        popl %ebp
+        add $0x10, %esp
         iret
-.endm
 
 isr_no_err_stub 0
 isr_no_err_stub 1

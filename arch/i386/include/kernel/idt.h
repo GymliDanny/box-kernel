@@ -4,14 +4,14 @@
 #include <stdint.h>
 
 // IDT Flags
-#define SEGMENT_PRESENT 0x8
-#define SEGMENT_RING0   0x0
-#define SEGMENT_STORAGE 0x0
-#define SEGMENT_GATE    0xE
-#define SEGMENT_DPL     0x8
+#define SEGMENT_PRESENT         0x80
+#define SEGMENT_RING0           0x00
+#define SEGMENT_RING3           0x60
+#define SEGMENT_STORAGE         0x00
+#define SEGMENT_INTERRUPT       0x0E
+#define IDT_EXCEPTION           (SEGMENT_PRESENT | SEGMENT_INTERRUPT)
 
-#define SEGMENT_FLAG    SEGMENT_PRESENT | SEGMENT_RING0 | SEGMENT_STORAGE |\
-                        SEGMENT_GATE    | SEGMENT_DPL;
+#define IDT_MAX_DESCRIPTORS     256
 
 struct idt_entry {
         uint16_t        isr_low;
@@ -26,10 +26,9 @@ struct idt_ptr {
         uint32_t        base;
 } __attribute__((packed));
 
-extern struct idt_entry idt[256];
+extern struct idt_entry idt[IDT_MAX_DESCRIPTORS];
 extern struct idt_ptr idtr;
 
 extern void idt_set_gate(uint8_t num, void(*handler)(void), uint16_t cs, uint8_t flags);
-extern void exception_handler(int num);
 
 #endif
