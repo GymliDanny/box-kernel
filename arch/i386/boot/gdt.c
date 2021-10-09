@@ -46,7 +46,7 @@ struct gpt_ptr {
         uint32_t base;
 }__attribute__((packed));
 
-uint64_t desc[5];
+uint64_t gdt_desc[5];
 struct gpt_ptr gp;
 
 extern void flush_gdt(struct gpt_ptr *ptr);
@@ -69,12 +69,12 @@ uint64_t create_gdt_entry(uint32_t base, uint32_t limit, uint16_t flag) {
 
 void gdt_install(void) {
         gp.limit = 64 * 5 - 1;
-        gp.base = (uint32_t)&desc;
+        gp.base = (uint32_t)&gdt_desc;
 
-        desc[0] = create_gdt_entry(0, 0, 0);
-        desc[1] = create_gdt_entry(0, 0x000FFFFF, GDT_CODE_PL0);
-        desc[2] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL0);
-        desc[3] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL3);
-        desc[4] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL3);
+        gdt_desc[0] = create_gdt_entry(0, 0, 0);
+        gdt_desc[1] = create_gdt_entry(0, 0x000FFFFF, GDT_CODE_PL0);
+        gdt_desc[2] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL0);
+        gdt_desc[3] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL3);
+        gdt_desc[4] = create_gdt_entry(0, 0x000FFFFF, GDT_DATA_PL3);
         flush_gdt(&gp);
 }
