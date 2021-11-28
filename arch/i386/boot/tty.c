@@ -54,6 +54,16 @@ void tty_putchar(char c) {
                                 terminal_scroll();
                         }
                         break;
+                case '\t':
+                        terminal_column += 4;
+                        if (++terminal_column == VGA_WIDTH) {
+                                terminal_column = 4;
+                                if (++terminal_row == VGA_HEIGHT) {
+                                        terminal_row--;
+                                        terminal_scroll();
+                                }
+                        }
+                        break;
                 default:
                         tty_putentryat(uc, terminal_color, terminal_column, terminal_row);
                         if (++terminal_column == VGA_WIDTH) {
