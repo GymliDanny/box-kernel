@@ -76,4 +76,10 @@ install-kernel: $(KERNEL)
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(KERNEL) $(DESTDIR)$(BOOTDIR)
 
+run: $(KERNEL)
+	qemu-system-i386 -kernel $(KERNEL)
+
+debug: $(KERNEL)
+	qemu-system-i386 -kernel $(KERNEL) -s -S
+
 -include $(OBJS:.o=.d)
