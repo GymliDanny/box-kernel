@@ -5,17 +5,113 @@
 #include <kernel/string.h>
 #include <stdint.h>
 
+#define SEGMENT_PRESENT         0x80
+#define SEGMENT_RING0           0x00
+#define SEGMENT_RING3           0x60
+#define SEGMENT_STORAGE         0x00
+#define SEGMENT_INTERRUPT       0x0E
+#define IDT_EXCEPTION           (SEGMENT_PRESENT | SEGMENT_INTERRUPT)
+#define IDT_INTERRUPT           (SEGMENT_PRESENT | SEGMENT_INTERRUPT)
+
+#define IDT_MAX_DESCRIPTORS     256
+
+struct idt_entry {
+        uint16_t        isr_low;
+        uint16_t        kernel_cs;
+        uint8_t         reserved;
+        uint8_t         flags;
+        uint16_t        isr_high;
+} __attribute__((packed));
+
+struct idt_ptr {
+        uint16_t        limit;
+        uint32_t        base;
+} __attribute__((packed));
+
 __attribute__((aligned(0x10)))
 struct idt_entry idt[256];
 struct idt_ptr idtr;
 
+char *exceptions[] = {
+        "Division by zero",
+        "Debug",
+        "Non-maskable interrupt",
+        "Breakpoint",
+        "Overflow",
+        "Out-of-bounds",
+        "Invalid opcode",
+        "FPU not available",
+        "Double fault",
+        "RESERVED",
+        "Invalid TSS",
+        "Segment not present",
+        "Stack fault",
+        "General protection fault",
+        "Page fault",
+        "RESERVED",
+        "FPU exception",
+        "Alignment check",
+        "Machine check",
+        "FPU-SIMD exception",
+        "Virtualization exception",
+        "Control protection"
+        "RESERVED",
+        "Hypervisor injection",
+        "VMM exception",
+        "Security exception",
+        "RESERVED",
+        "Triple fault",
+        "RESERVED"
+};
+
 __attribute__((noreturn))
-void exception_handler(struct isr_frame *frame) {
-        kprintf("Error: CPU exception: %d\n", frame->vector);
+void halt_catch_fire(struct isr_frame *frame) {
+        kprintf("Registers at interrupt:\n");
+        kprintf("\tEAX = %x\n", frame->eax);
+        kprintf("\tEBX = %x\n", frame->ebx);
+        kprintf("\tECX = %x\n", frame->ecx);
+        kprintf("\tEDX = %x\n", frame->edx);
+        kprintf("\tESI = %x\n", frame->esi);
+        kprintf("\tEDI = %x\n", frame->edi);
+        kprintf("\tESP = %x\n", frame->esp);
+        kprintf("\tEBP = %x\n", frame->ebp);
+        kprintf("\tEIP = %x\n", frame->eip);
+        kprintf("\tEFLAGS = %x\n", frame->eflags);
+        kprintf("Current code selector: %d\n", frame->cs);
         __asm__ volatile("cli;hlt");
 }
 
-extern void idt_set_gate(uint8_t num, void (*handler)(void), uint16_t cs, uint8_t flags) {
+__attribute__((noreturn))
+void exception_handler(struct isr_frame *frame) {
+        switch (frame->vector) {
+                default:
+                        kprintf("Unhandled exception: %s\n", exceptions[frame->vector]);
+                        halt_catch_fire(frame);
+        }
+}
+
+void irq_dispatch(uint8_t irq, struct isr_frame *frame) {
+        return;
+}
+
+__attribute__((noreturn))
+void interrupt_handler(struct isr_frame *frame) {
+        if (frame->vector < 32)
+                exception_handler(frame);
+        else if (frame->vector > 32 && frame->vector < 48)
+                irq_dispatch(frame->vector - 16, frame);
+        switch (frame->vector) {
+                case 0x80:
+                        syscall_dispatch(frame);
+                        break;
+                default:
+                        kprintf("Error: Unmapped interrupt: %d\n", frame->vector);
+                        halt_catch_fire(frame);
+                        __asm__ volatile("cli;hlt");
+        }
+}
+
+void idt_set_gate(uint8_t num, void (*handler)(void), uint16_t cs, uint8_t flags) {
         struct idt_entry *desc = &idt[num];
         desc->isr_low = (uint16_t)(((uint32_t)handler >> 0) & 0xFFFF);
         desc->isr_high = (uint16_t)(((uint32_t)handler >> 16) & 0xFFFF);
@@ -26,7 +122,7 @@ extern void idt_set_gate(uint8_t num, void (*handler)(void), uint16_t cs, uint8_
 
 void idt_install(void) {
         idtr.limit = (uint16_t)sizeof(struct idt_entry) * 256 - 1;
-        idtr.base = (uint32_t)&idt[0];
+        idtr.base = (uint32_t)idt;
 
         idt_set_gate(0, isr_stub_0, 0x08, IDT_EXCEPTION);
         idt_set_gate(1, isr_stub_1, 0x08, IDT_EXCEPTION);
