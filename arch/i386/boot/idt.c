@@ -1,4 +1,4 @@
-#include <kernel/idt.h>
+#include "syscall.h"
 #include <kernel/isr.h>
 #include <kernel/io.h>
 #include <kernel/pic.h>
@@ -156,6 +156,10 @@ void idt_install(void) {
         idt_set_gate(29, isr_stub_29, 0x08, IDT_EXCEPTION);
         idt_set_gate(30, isr_stub_30, 0x08, IDT_EXCEPTION);
         idt_set_gate(31, isr_stub_31, 0x08, IDT_EXCEPTION);
+
+        idt_set_gate(128, syscall_stub, 0x08, IDT_INTERRUPT);
+
+        register_syscall(halt_catch_fire, 0);
 
         __asm__ volatile("lidt %0" : : "memory"(idtr));
         __asm__ volatile("sti");

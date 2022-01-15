@@ -71,6 +71,10 @@ _start:
         call idt_install
         call pic_remap
 
+        pushl $1
+        pushl print_hello
+        call register_syscall
+
         call kernel_main
         call jump_userspace
 

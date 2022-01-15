@@ -51,7 +51,7 @@ void irq_set_mask(uint8_t irq) {
         outb(port, data);
 }
 
-void irq_clear_mask(unsigned char irq) {
+void irq_clear_mask(uint8_t irq) {
         uint16_t port;
         uint8_t data;
 
