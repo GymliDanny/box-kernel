@@ -25,7 +25,6 @@ boot_page_table0:
 .section .multiboot.text, "a"
 .global _start
 .type _start, @function
-
 _start:
         movl $(boot_page_table0 - 0xC0000000), %edi
         movl $0, %esi
@@ -73,6 +72,7 @@ _start:
         call pic_remap
 
         call kernel_main
+        call jump_userspace
 
         cli
 1:      hlt
@@ -80,11 +80,9 @@ _start:
 
 .global flush_gdt
 .type flush_gdt, @function
-
 flush_gdt:
         cli
-        movl 4(%esp), %eax
-        lgdt (%eax)
+        lgdt (gp)
         movw $0x10, %ax
         movw %ax, %ds
         movw %ax, %es
@@ -92,4 +90,34 @@ flush_gdt:
         movw %ax, %gs
         movw %ax, %ss
         jmp $0x08, $.flush
-.flush: ret
+.flush:
+        ret
+
+.global flush_tss
+.type flush_tss, @function
+flush_tss:
+        movw $0x28, %ax
+        ltr %ax
+        ret
+
+.global jump_userspace
+.type jump_userspace, @function
+jump_userspace:
+        cli
+        movw $0x23, %ax
+        movw %ax, %ds
+        movw %ax, %es
+        movw %ax, %fs
+        movw %ax, %gs
+
+        pushl $0x23
+        pushl %esp
+        pushf
+        orl $0x200, (%esp)
+        pushl $0x8
+        pushl $test_user_function
+        iret
+
+test_user_function:
+        movl $1, %eax
+        int $0x80
