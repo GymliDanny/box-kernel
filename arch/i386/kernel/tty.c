@@ -1,4 +1,4 @@
-#include "vga.h"
+#include <kernel/vga.h>
 #include <kernel/tty.h>
 #include <kernel/string.h>
 #include <stddef.h>
@@ -6,7 +6,8 @@
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
-static uint16_t *const VGA_MEMORY = (uint16_t*)0xC03FF000;
+//static uint16_t *const VGA_MEMORY = (uint16_t*)0xC03FF000;
+static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
 
 static size_t terminal_row;
 static size_t terminal_column;
