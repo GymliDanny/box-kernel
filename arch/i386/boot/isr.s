@@ -51,8 +51,7 @@ isr_frame_asm:
         movl %cr4, %eax
         pushl %eax
 
-        lea -8(%esp), %edi
-        pushl %edi
+        pushl %esp
         call interrupt_handler
 
         popl %eax
@@ -71,7 +70,7 @@ isr_frame_asm:
         popl %ebx
         popl %eax
 
-        addl $4, %esp
+        addl $20, %esp
         iret
 
 isr_no_err_stub 0

@@ -9,7 +9,6 @@ void syscall_dispatch(struct isr_frame *frame) {
                 syscall_handlers[frame->eax](frame);
         else
                 kprintf("Error: Invalid system call number: %d\n", frame->eax);
-        __asm__ volatile("cli;hlt");
 }
 
 void register_syscall(void *handler(struct isr_frame*), int num) {
@@ -34,9 +33,6 @@ void dump_reg(struct isr_frame *frame) {
         kprintf("\tEDX = %x\n", frame->edx);
         kprintf("\tESI = %x\n", frame->esi);
         kprintf("\tEDI = %x\n", frame->edi);
-        kprintf("\tESP = %x\n", frame->esp);
-        kprintf("\tEBP = %x\n", frame->ebp);
         kprintf("\tEIP = %x\n", frame->eip);
-        kprintf("\tEFLAGS = %x\n", frame->eflags);
         kprintf("Current code selector: %d\n", frame->cs);
 }
