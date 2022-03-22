@@ -1,18 +1,20 @@
-CC=i686-elf-gcc
 INCLUDE?=-Iinclude
 CFLAGS?=-O2 -ffreestanding -std=gnu11
 LDFLAGS?=-nostdlib
 LIBS?=-lgcc
+ARCH?=i386
 
 # -- Do not edit below this line --
 
+CC:=i686-elf-gcc
 VERSION:="$(shell git describe --abbrev=4 --dirty --always --tags)"
 INCLUDE:=$(INCLUDE)
 CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)
+ARCH:=$(ARCH)
 
-ARCHDIR=arch/i386
+ARCHDIR=arch/$(ARCH)
 
 include $(ARCHDIR)/make.config
 
