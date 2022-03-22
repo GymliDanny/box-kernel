@@ -1,4 +1,4 @@
-#include "syscall.h"
+#include <kernel/syscall.h>
 #include <kernel/isr.h>
 #include <kernel/io.h>
 #include <kernel/pic.h>
@@ -66,24 +66,17 @@ char *exceptions[] = {
 
 __attribute__((noreturn))
 void halt_catch_fire(struct isr_frame *frame) {
-        kprintf("Registers at interrupt:\n");
-        kprintf("\tEAX = %x\n", frame->eax);
-        kprintf("\tEBX = %x\n", frame->ebx);
-        kprintf("\tECX = %x\n", frame->ecx);
-        kprintf("\tEDX = %x\n", frame->edx);
-        kprintf("\tESI = %x\n", frame->esi);
-        kprintf("\tEDI = %x\n", frame->edi);
-        kprintf("\tESP = %x\n", frame->esp);
-        kprintf("\tEBP = %x\n", frame->ebp);
-        kprintf("\tEIP = %x\n", frame->eip);
-        kprintf("\tEFLAGS = %x\n", frame->eflags);
-        kprintf("Current code selector: %d\n", frame->cs);
+        dump_reg(frame);
         __asm__ volatile("cli;hlt");
 }
 
 __attribute__((noreturn))
 void exception_handler(struct isr_frame *frame) {
         switch (frame->vector) {
+                case 0x0E:
+                        kprintf("PAGE FAULT\n");
+                        halt_catch_fire(frame);
+                        break;
                 default:
                         kprintf("Unhandled exception: %s\n", exceptions[frame->vector]);
                         halt_catch_fire(frame);
@@ -159,7 +152,8 @@ void idt_install(void) {
 
         idt_set_gate(128, syscall_stub, 0x08, IDT_INTERRUPT);
 
-        register_syscall(halt_catch_fire, 0);
+        register_syscall(sys_stop, 0);
+        register_syscall(sys_status, 1);
 
         __asm__ volatile("lidt %0" : : "memory"(idtr));
         __asm__ volatile("sti");

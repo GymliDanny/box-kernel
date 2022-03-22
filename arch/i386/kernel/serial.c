@@ -40,8 +40,3 @@ void write_serial(char a) {
         while (is_transmit_empty() == 0);
         outb(PORT, a);
 }
-
-void serial_writestring(const char *str) {
-        for (size_t i = 0; i < strlen(str); i++)
-                write_serial(str[i]);
-}
