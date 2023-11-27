@@ -27,9 +27,6 @@ struct idt_ptr {
         uint32_t        base;
 } __attribute__((packed));
 
-extern struct idt_entry idt[IDT_MAX_DESCRIPTORS];
-extern struct idt_ptr idtr;
-
-extern void idt_set_gate(uint8_t num, void(*handler)(void), uint16_t cs, uint8_t flags);
+void idt_install(void);
 
 #endif
