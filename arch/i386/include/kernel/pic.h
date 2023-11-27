@@ -45,6 +45,8 @@ void pic_remap(void);
 uint16_t pic_get_irr(void);
 uint16_t pic_get_isr(void);
 
+void register_irq_handler(uint8_t irq, void (*handler)(struct isr_frame *frame));
+
 void irq_set_mask(uint8_t irq);
 void irq_clear_mask(uint8_t irq);
 
