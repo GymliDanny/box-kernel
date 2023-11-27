@@ -1,6 +1,7 @@
 #ifndef I386_PIC_H
 #define I386_PIC_H
 
+#include <kernel/idt.h>
 #include <stdint.h>
 
 #define PIC1            0x20
@@ -39,7 +40,7 @@ static inline void io_wait(void) {
         outb(0x80, 0);
 }
 
-void pic_eoi(unsigned char irq);
+void pic_eoi(uint8_t irq);
 void pic_remap(void);
 uint16_t pic_get_irr(void);
 uint16_t pic_get_isr(void);
