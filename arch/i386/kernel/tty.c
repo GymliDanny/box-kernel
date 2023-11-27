@@ -43,10 +43,11 @@ void terminal_scroll(void) {
 }
 
 void tty_putchar(char c) {
-        unsigned char uc;
-
-        uc = c;
+        unsigned char uc = c;
         switch (uc) {
+                case '\r':
+                        terminal_column = 0;
+                        break;
                 case '\n':
                         terminal_column = 0;
                         if (++terminal_row == VGA_HEIGHT) {
