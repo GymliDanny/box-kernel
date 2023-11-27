@@ -2,27 +2,15 @@
 #include <kernel/io.h>
 #include <stddef.h>
 
-void *(*syscall_handlers[30])(struct isr_frame *frame);
-
-void syscall_dispatch(struct isr_frame *frame) {
-        if (syscall_handlers[frame->eax] != NULL)
-                syscall_handlers[frame->eax](frame);
-        else
-                kprintf("Error: Invalid system call number: %d\n", frame->eax);
-}
-
-void register_syscall(void *handler(struct isr_frame*), int num) {
-        syscall_handlers[num] = handler;
-}
-
-void sys_stop(struct isr_frame *frame) {
-        kprintf("SYSTEM CALL: STOP\n");
-        halt_catch_fire(frame);
-}
-
-void sys_status(struct isr_frame *frame) {
-        kprintf("SYSTEM CALL: STATUS\n");
-        dump_reg(frame);
+int handle_syscall(struct isr_frame *frame) {
+        switch (frame->eax) {
+                case SYS_REBOOT:
+                        kprintf("REBOOT NOT SUPPORTED\n");
+                        break;
+                default:
+                        kprintf("Error: Invalid system call number: %d\n", frame->eax);
+        }
+        return 0;
 }
 
 void dump_reg(struct isr_frame *frame) {
