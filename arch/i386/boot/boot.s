@@ -68,16 +68,9 @@ _start:
         movl $stack_top, %esp
         and $-16, %esp
 
-        call gdt_install
-        call idt_install
-        call pic_remap
-
-        pushl $1
-        pushl print_hello
-        call register_syscall
-
-        call kernel_main
-        call jump_userspace
+        pushl %ebx
+        pushl %eax
+        call i386_entry
 
         cli
 1:      hlt
