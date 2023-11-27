@@ -33,7 +33,6 @@ uint32_t pfa_alloc_frame(void) {
                         return i * 4096;
                 }
         }
-        __asm__ volatile("hlt");
         return 0xFFFFFFFF;
 }
 
