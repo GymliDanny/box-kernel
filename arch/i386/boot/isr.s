@@ -24,7 +24,7 @@ isr_stub_\num:
 irq_stub_\num:
         cli
         pushl $0
-        pushl $\num
+        pushl $\num+32
         jmp isr_frame_asm
 .endm
 
@@ -41,6 +41,7 @@ isr_frame_asm:
         pushl %edx
         pushl %esi
         pushl %edi
+        pushl %esp
 
         movl %cr0, %eax
         pushl %eax
@@ -51,7 +52,7 @@ isr_frame_asm:
         movl %cr4, %eax
         pushl %eax
 
-        pushl %esp
+        cld
         call interrupt_handler
 
         popl %eax
@@ -63,6 +64,7 @@ isr_frame_asm:
         popl %eax
         movl %eax, %cr0
 
+        popl %esp
         popl %edi
         popl %esi
         popl %edx
@@ -70,7 +72,6 @@ isr_frame_asm:
         popl %ebx
         popl %eax
 
-        addl $20, %esp
         iret
 
 isr_no_err_stub 0
@@ -105,3 +106,20 @@ isr_no_err_stub 28
 isr_err_stub    29
 isr_err_stub    30
 isr_no_err_stub 31
+
+irq_stub 0
+irq_stub 1
+irq_stub 2
+irq_stub 3
+irq_stub 4
+irq_stub 5
+irq_stub 6
+irq_stub 7
+irq_stub 8
+irq_stub 9
+irq_stub 10
+irq_stub 11
+irq_stub 12
+irq_stub 13
+irq_stub 14
+irq_stub 15
