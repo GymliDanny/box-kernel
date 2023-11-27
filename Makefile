@@ -1,5 +1,5 @@
 INCLUDE?=-Iinclude
-CFLAGS?=-O2 -ffreestanding -std=gnu11
+CFLAGS?=-O0 -ffreestanding -std=gnu11
 LDFLAGS?=-nostdlib
 LIBS?=-lgcc
 ARCH?=i386
@@ -28,6 +28,7 @@ KERNEL_OBJS=$(KERNEL_ARCH_OBJS) \
 	    kernel/init.o \
 	    kernel/string.o \
 	    kernel/io.o \
+	    kernel/mem.o \
 
 OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/crtbegin.o \
@@ -36,12 +37,8 @@ OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/boot/crtn.o \
 
 LINK_LIST=$(LDFLAGS) \
-	  $(ARCHDIR)/boot/crti.o \
-	  $(ARCHDIR)/crtbegin.o \
 	  $(KERNEL_OBJS) \
 	  $(LIBS) \
-	  $(ARCHDIR)/crtend.o \
-	  $(ARCHDIR)/boot/crtn.o \
 
 .PHONY: all clean install install-headers install-kernel
 .SUFFIXES: .o .c .s
@@ -77,6 +74,16 @@ install-headers:
 install-kernel: $(KERNEL)
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(KERNEL) $(DESTDIR)$(BOOTDIR)
+
+install-disk: $(KERNEL)
+	rm a.img
+	bximage -q -func=create -fd=1.44M a.img
+	mkdosfs a.img
+	syslinux -i a.img
+	mcopy -i a.img libcom32.c32 ::libcom32.c32
+	mcopy -i a.img mboot.c32 ::mboot.c32
+	mcopy -i a.img syslinux.cfg ::syslinux.cfg
+	mcopy -i a.img vmbox ::vmbox
 
 run: $(KERNEL)
 	qemu-system-i386 -kernel $(KERNEL)
