@@ -60,7 +60,8 @@ void exception_handler(struct isr_frame *frame) {
         }
 }
 
-void irq_dispatch(uint8_t irq, struct isr_frame *frame) {
+void irq_dispatch(struct isr_frame *frame) {
+        pic_eoi(frame->vector-32);
         return;
 }
 
