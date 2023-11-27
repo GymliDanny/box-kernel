@@ -46,6 +46,7 @@ __attribute__((noreturn))
 void halt_catch_fire(struct isr_frame *frame) {
         dump_reg(frame);
         __asm__ volatile("cli;hlt");
+        while (1);
 }
 
 __attribute__((noreturn))
