@@ -1,6 +1,8 @@
 #include <kernel/pic.h>
 
-void pic_eoi(unsigned char irq) {
+void (*irq_handlers[16])(struct isr_frame *frame);
+
+void pic_eoi(uint8_t irq) {
         if (irq >= 8)
                 outb(PIC2_COMMAND, 0x20);
         outb(PIC1_COMMAND, 0x20);
