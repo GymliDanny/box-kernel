@@ -63,7 +63,7 @@ void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_
 
 void write_tss(int num, uint16_t ss0, uint16_t esp0) {
         uint32_t base = (uint32_t)&tss_entry;
-        uint32_t limit = base + sizeof(tss_entry);
+        uint32_t limit = base + sizeof(struct tss_entry);
 
         gdt_set_gate(num, base, limit, 0xE9, 0x00);
         memset(&tss_entry, 0x0, sizeof(tss_entry));
@@ -88,7 +88,10 @@ void gdt_install(void) {
         gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
         gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
         gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
-        write_tss(5, 0x10, 0x0);
+        
+        uint32_t esp;
+        __asm__ volatile("movl %%esp, %0" : "=r"(esp));
+        write_tss(5, 0x10, esp);
 
         flush_gdt();
         flush_tss();
