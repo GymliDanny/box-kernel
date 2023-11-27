@@ -25,5 +25,10 @@ SECTIONS {
                 *(.bss)
                 *(.bootstrap_stack)
         }
+
+        _bitmap_start = .;
+        . += 128K;
+        _bitmap_end = .;
+
         _kernel_end = .;
 }
