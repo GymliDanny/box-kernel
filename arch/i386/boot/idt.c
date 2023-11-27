@@ -65,20 +65,21 @@ void irq_dispatch(struct isr_frame *frame) {
         return;
 }
 
-__attribute__((noreturn))
 void interrupt_handler(struct isr_frame *frame) {
-        if (frame->vector < 32)
+        if (frame->vector < 32) {
                 exception_handler(frame);
-        else if (frame->vector > 32 && frame->vector < 48)
-                irq_dispatch(frame->vector - 16, frame);
-        switch (frame->vector) {
-                case 0x80:
-                        syscall_dispatch(frame);
-                        break;
-                default:
-                        kprintf("Error: Unmapped interrupt: %d\n", frame->vector);
-                        halt_catch_fire(frame);
-                        __asm__ volatile("cli;hlt");
+        } else if (frame->vector >= 32 && frame->vector < 48) {
+                irq_dispatch(frame);
+        } else {
+                switch (frame->vector) {
+                        case 0x80:
+                                handle_syscall(frame);
+                                break;
+                        default:
+                                kprintf("Error: Unmapped interrupt: %d\n", frame->vector);
+                                halt_catch_fire(frame);
+                                __asm__ volatile("cli;hlt");
+                }
         }
 }
 
@@ -95,43 +96,57 @@ void idt_install(void) {
         idtr.limit = (uint16_t)sizeof(struct idt_entry) * 256 - 1;
         idtr.base = (uint32_t)idt;
 
-        idt_set_gate(0, isr_stub_0, 0x08, IDT_EXCEPTION);
-        idt_set_gate(1, isr_stub_1, 0x08, IDT_EXCEPTION);
-        idt_set_gate(2, isr_stub_2, 0x08, IDT_EXCEPTION);
-        idt_set_gate(3, isr_stub_3, 0x08, IDT_EXCEPTION);
-        idt_set_gate(4, isr_stub_4, 0x08, IDT_EXCEPTION);
-        idt_set_gate(5, isr_stub_5, 0x08, IDT_EXCEPTION);
-        idt_set_gate(6, isr_stub_6, 0x08, IDT_EXCEPTION);
-        idt_set_gate(7, isr_stub_7, 0x08, IDT_EXCEPTION);
-        idt_set_gate(8, isr_stub_8, 0x08, IDT_EXCEPTION);
-        idt_set_gate(9, isr_stub_9, 0x08, IDT_EXCEPTION);
-        idt_set_gate(10, isr_stub_10, 0x08, IDT_EXCEPTION);
-        idt_set_gate(11, isr_stub_11, 0x08, IDT_EXCEPTION);
-        idt_set_gate(12, isr_stub_12, 0x08, IDT_EXCEPTION);
-        idt_set_gate(13, isr_stub_13, 0x08, IDT_EXCEPTION);
-        idt_set_gate(14, isr_stub_14, 0x08, IDT_EXCEPTION);
-        idt_set_gate(15, isr_stub_15, 0x08, IDT_EXCEPTION);
-        idt_set_gate(16, isr_stub_16, 0x08, IDT_EXCEPTION);
-        idt_set_gate(17, isr_stub_17, 0x08, IDT_EXCEPTION);
-        idt_set_gate(18, isr_stub_18, 0x08, IDT_EXCEPTION);
-        idt_set_gate(19, isr_stub_19, 0x08, IDT_EXCEPTION);
-        idt_set_gate(20, isr_stub_20, 0x08, IDT_EXCEPTION);
-        idt_set_gate(21, isr_stub_21, 0x08, IDT_EXCEPTION);
-        idt_set_gate(22, isr_stub_22, 0x08, IDT_EXCEPTION);
-        idt_set_gate(23, isr_stub_23, 0x08, IDT_EXCEPTION);
-        idt_set_gate(24, isr_stub_24, 0x08, IDT_EXCEPTION);
-        idt_set_gate(25, isr_stub_25, 0x08, IDT_EXCEPTION);
-        idt_set_gate(26, isr_stub_26, 0x08, IDT_EXCEPTION);
-        idt_set_gate(27, isr_stub_27, 0x08, IDT_EXCEPTION);
-        idt_set_gate(28, isr_stub_28, 0x08, IDT_EXCEPTION);
-        idt_set_gate(29, isr_stub_29, 0x08, IDT_EXCEPTION);
-        idt_set_gate(30, isr_stub_30, 0x08, IDT_EXCEPTION);
-        idt_set_gate(31, isr_stub_31, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x0, isr_stub_0, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1, isr_stub_1, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x2, isr_stub_2, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x3, isr_stub_3, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x4, isr_stub_4, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x5, isr_stub_5, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x6, isr_stub_6, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x7, isr_stub_7, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x8, isr_stub_8, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x9, isr_stub_9, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xA, isr_stub_10, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xB, isr_stub_11, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xC, isr_stub_12, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xD, isr_stub_13, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xE, isr_stub_14, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0xF, isr_stub_15, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x10, isr_stub_16, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x11, isr_stub_17, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x12, isr_stub_18, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x13, isr_stub_19, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x14, isr_stub_20, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x15, isr_stub_21, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x16, isr_stub_22, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x17, isr_stub_23, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x18, isr_stub_24, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x19, isr_stub_25, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1A, isr_stub_26, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1B, isr_stub_27, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1C, isr_stub_28, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1D, isr_stub_29, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1E, isr_stub_30, 0x08, IDT_EXCEPTION);
+        idt_set_gate(0x1F, isr_stub_31, 0x08, IDT_EXCEPTION);
 
-        idt_set_gate(128, syscall_stub, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x20, irq_stub_0, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x21, irq_stub_1, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x22, irq_stub_2, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x23, irq_stub_3, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x24, irq_stub_4, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x25, irq_stub_5, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x26, irq_stub_6, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x27, irq_stub_7, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x28, irq_stub_8, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x29, irq_stub_9, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2A, irq_stub_10, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2B, irq_stub_11, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2C, irq_stub_12, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2D, irq_stub_13, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2E, irq_stub_14, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x2F, irq_stub_15, 0x08, IDT_INTERRUPT);
 
-        register_syscall(sys_stop, 0);
-        register_syscall(sys_status, 1);
+        idt_set_gate(0x80, syscall_stub, 0x08, IDT_INTERRUPT);
 
         __asm__ volatile("lidt %0" : : "memory"(idtr));
         __asm__ volatile("sti");
