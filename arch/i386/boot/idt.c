@@ -49,12 +49,10 @@ void halt_catch_fire(struct isr_frame *frame) {
         while (1);
 }
 
-__attribute__((noreturn))
 void exception_handler(struct isr_frame *frame) {
         switch (frame->vector) {
                 case 0x0E:
-                        kprintf("PAGE FAULT\n");
-                        halt_catch_fire(frame);
+                        page_fault_handler(frame);
                         break;
                 default:
                         kprintf("Unhandled exception: %s\n", exceptions[frame->vector]);
