@@ -52,7 +52,7 @@ _start:
         movl %ecx, %cr3
 
         movl %cr0, %ecx
-        orl $0x80010000, %ecx
+        orl $0x80000000, %ecx
         movl %ecx, %cr0
 
         lea 4f, %ecx
@@ -66,6 +66,7 @@ _start:
         movl %ecx, %cr3
 
         movl $stack_top, %esp
+        and $-16, %esp
 
         call gdt_install
         call idt_install
@@ -107,7 +108,6 @@ flush_tss:
 .global jump_userspace
 .type jump_userspace, @function
 jump_userspace:
-        cli
         movw $0x23, %ax
         movw %ax, %ds
         movw %ax, %es
@@ -118,10 +118,6 @@ jump_userspace:
         pushl %esp
         pushf
         orl $0x200, (%esp)
-        pushl $0x8
-        pushl $test_user_function
+        pushl $0x1B
+        pushl test_user_function
         iret
-
-test_user_function:
-        movl $1, %eax
-        int $0x80
