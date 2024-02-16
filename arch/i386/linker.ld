@@ -26,9 +26,9 @@ SECTIONS {
                 *(.bootstrap_stack)
         }
 
-        _bitmap_start = .;
-        . += 128K;
-        _bitmap_end = .;
+        .usertext ALIGN(4K) : AT(ADDR(.usertext) - 0xC0000000) {
+                *(.usertext)
+        }
 
         _kernel_end = .;
 }

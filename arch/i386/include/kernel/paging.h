@@ -2,6 +2,8 @@
 #define I386_PAGING_H
 
 #include <kernel/isr.h>
+#include <kernel/multiboot.h>
+#include <kernel/data/list.h>
 #include <stdint.h>
 
 #define PD_PRES         0x0001
@@ -21,32 +23,27 @@
 #define ERR_RESERVED    0x8
 #define ERR_INST        0x10
 
-#define BLOCK_SIZE 4096
-#define BLOCKS_PER_BUCKET 8
-#define BLOCK_ALIGN(addr) (((addr) & 0xFFFFF000) + 0x1000)
+#define PAGE_SIZE       4096
 
-#define SETBIT(x,i)     x[i/BLOCKS_PER_BUCKET] = x[i/BLOCKS_PER_BUCKET] | (1 << (i % BLOCKS_PER_BUCKET))
-#define CLEARBIT(x,i)   x[i/BLOCKS_PER_BUCKET] = x[i/BLOCKS_PER_BUCKET] & (~(1 << (i % BLOCKS_PER_BUCKET)))
-#define ISSET(x,i)      ((x[i/BLOCKS_PER_BUCKET] >> (i % BLOCKS_PER_BUCKET)) & 0x1)
-#define GETBUCKET(x,i)  (*((uint32_t*)&x[i/32]))
+#define DMA_BITMAP_SZ   128
+#define BDY_BITMAP_SZ   32640
 
-#define PAGE_SIZE 4096
-
-struct page_frame {
-        int used;
-        uint32_t addr;
+struct pfa_buddy {
+        uintptr_t start;
+        uintptr_t *bitmap;
+        uint8_t size;
+        struct list_head list;
 };
 
-void load_page_dir(uint32_t pd_addr);
+void load_page_dir(uintptr_t pd_addr);
 void enable_paging(void);
 
-void paging_init();
+void paging_init(void);
 void page_fault_handler(struct isr_frame *frame);
 
-uint32_t get_paddr(uint32_t vaddr);
-uint32_t get_vaddr(uint32_t paddr);
+uint32_t get_vaddr(uintptr_t paddr);
 
-void map_page(uint32_t paddr, uint32_t vaddr, uint32_t flags);
-void unmap_page(uint32_t vaddr);
+void map_page(uint32_t *pd, uintptr_t paddr, uintptr_t vaddr, uint32_t flags);
+void unmap_page(uint32_t *pd, uintptr_t vaddr);
 
 #endif
