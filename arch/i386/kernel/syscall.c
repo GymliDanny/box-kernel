@@ -9,6 +9,7 @@ int handle_syscall(struct isr_frame *frame) {
                         break;
                 default:
                         kprintf("Error: Invalid system call number: %d\n", frame->eax);
+                        halt_catch_fire(frame);
         }
         return 0;
 }
@@ -22,5 +23,10 @@ void dump_reg(struct isr_frame *frame) {
         kprintf("\tESI = %x\n", frame->esi);
         kprintf("\tEDI = %x\n", frame->edi);
         kprintf("\tEIP = %x\n", frame->eip);
-        kprintf("Current code selector: %d\n", frame->cs);
+        kprintf("Current code selector: %x\n", frame->cs);
+}
+
+void dump_stack(uint32_t esp, size_t len) {
+        for (uint32_t i = 0; i < len; i++)
+                kprintf("%x:\t%x\n", esp+i, *(uint32_t*)(esp+i));
 }

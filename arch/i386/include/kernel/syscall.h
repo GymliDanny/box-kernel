@@ -2,6 +2,7 @@
 #define I386_SYSCALL_H
 
 #include <kernel/isr.h>
+#include <stddef.h>
 
 // Unix standard calls
 #define SYS_FORK        1
@@ -27,5 +28,6 @@
 
 int handle_syscall(struct isr_frame *frame);
 void dump_reg(struct isr_frame *frame);
+void dump_stack(uintptr_t esp, size_t len);
 
 #endif
