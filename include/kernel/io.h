@@ -1,5 +1,5 @@
-#ifndef IO_H
-#define IO_H
+#ifndef KERNEL_IO_H
+#define KERNEL_IO_H
 
 #include <stdarg.h>
 

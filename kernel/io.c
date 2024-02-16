@@ -1,6 +1,10 @@
 #include <kernel/io.h>
+#include <kernel/framebuffer.h>
+#include <kernel/data/ringbuf.h>
 #include <kernel/string.h>
-#include <kernel/tty.h>
+
+static int ringbuf_init = 0;
+static struct ringbuf rb;
 
 char* convert(unsigned int num, int base) {
         static char rep[] = "0123456789ABCDEF";
@@ -19,12 +23,18 @@ char* convert(unsigned int num, int base) {
 }
 
 int vkprintf(const char *fmt, va_list args) {
+        if (ringbuf_init == 0) {
+                rb_init(&rb, 1024, 4096);
+                ringbuf_init = 1;
+        }
+
         char *s;
         int i;
 
+        char buffer[4096];
         for (size_t n = 0; n < strlen(fmt); n++) {
                 if (fmt[n] != '%') {
-                        tty_putchar(fmt[n]);
+                        buffer[strlen(buffer)] = fmt[n];
                         continue;
                 } else {
                         n++;
@@ -33,30 +43,32 @@ int vkprintf(const char *fmt, va_list args) {
                 switch (fmt[n]) {
                         case 'c':
                                 i = va_arg(args, int);
-                                tty_putchar(i);
+                                buffer[strlen(buffer)] = i;
+                                break;
+                        case 's':
+                                s = va_arg(args, char*);
+                                strcat(buffer, s);
                                 break;
                         case 'd':
                                 i = va_arg(args, int);
                                 if (i < 0) {
                                         i = -i;
-                                        tty_putchar('-');
+                                        strcat(buffer, "-");
                                 }
-                                tty_writestring(convert(i, 10));
+                                strcat(buffer, convert(i, 10));
                                 break;
                         case 'o':
                                 i = va_arg(args, unsigned int);
-                                tty_writestring(convert(i, 8));
-                                break;
-                        case 's':
-                                s = va_arg(args, char*);
-                                tty_writestring(s);
+                                strcat(buffer, convert(i, 10));
                                 break;
                         case 'x':
                                 i = va_arg(args, unsigned int);
-                                tty_writestring(convert(i, 16));
+                                strcat(buffer, convert(i, 16));
                                 break;
                 }
         }
+        rb_push_back(&rb, buffer, strlen(buffer));
+        memset(buffer, 0, 4096);
         return 0;
 }
 
