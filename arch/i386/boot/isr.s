@@ -30,6 +30,7 @@ irq_stub_\num:
 
 .global syscall_stub
 syscall_stub:
+        cli
         pushl $0
         pushl $0x80
         jmp isr_frame_asm
@@ -41,7 +42,6 @@ isr_frame_asm:
         pushl %edx
         pushl %esi
         pushl %edi
-        pushl %esp
 
         movl %cr0, %eax
         pushl %eax
@@ -51,6 +51,10 @@ isr_frame_asm:
         pushl %eax
         movl %cr4, %eax
         pushl %eax
+
+        pushl %esp
+        call set_kernel_esp
+        addl $4, %esp
 
         cld
         call interrupt_handler
@@ -64,13 +68,13 @@ isr_frame_asm:
         popl %eax
         movl %eax, %cr0
 
-        popl %esp
         popl %edi
         popl %esi
         popl %edx
         popl %ecx
         popl %ebx
         popl %eax
+        addl $8, %esp
 
         iret
 
