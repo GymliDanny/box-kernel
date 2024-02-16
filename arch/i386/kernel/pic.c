@@ -1,6 +1,6 @@
 #include <kernel/pic.h>
 
-void (*irq_handlers[16])(struct isr_frame *frame);
+static void (*irq_handlers[16])(struct isr_frame *frame);
 
 void pic_eoi(uint8_t irq) {
         if (irq >= 8)
@@ -36,6 +36,16 @@ uint16_t pic_get_irr(void) {
 
 uint16_t pic_get_isr(void) {
         return __pic_get_irq_reg(PIC_READ_ISR);
+}
+
+void register_irq_handler(uint8_t irq, void (*handler)(struct isr_frame *frame)) {
+        irq_handlers[irq] = handler;
+}
+
+void irq_dispatch(struct isr_frame *frame) {
+        (*irq_handlers[frame->vector-32])(frame);
+        pic_eoi(frame->vector-32);
+        return;
 }
 
 void irq_set_mask(uint8_t irq) {

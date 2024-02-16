@@ -1,4 +1,6 @@
 #include <kernel/syscall.h>
+#include <kernel/panic.h>
+#include <kernel/gdt.h>
 #include <kernel/isr.h>
 #include <kernel/io.h>
 #include <kernel/pic.h>
@@ -10,7 +12,7 @@ __attribute__((aligned(0x10)))
 struct idt_entry idt[256];
 struct idt_ptr idtr;
 
-char *exceptions[] = {
+const char* exceptions[] = {
         "Division by zero",
         "Debug",
         "Non-maskable interrupt",
@@ -45,39 +47,47 @@ char *exceptions[] = {
 __attribute__((noreturn))
 void halt_catch_fire(struct isr_frame *frame) {
         dump_reg(frame);
+        kprintf("ERRNO=%x\n", frame->errno);
         __asm__ volatile("cli;hlt");
         while (1);
 }
 
 void exception_handler(struct isr_frame *frame) {
         switch (frame->vector) {
+                case 0x00:
+                        panic("Division by zero in kernel address space");
+                        halt_catch_fire(frame);
+                case 0x06:
+                        panic("Invalid opcode in kernel address space");
+                        halt_catch_fire(frame);
+                case 0x08:
+                        panic("Double fault in interrupt handler");
+                        halt_catch_fire(frame);
+                case 0x0D:
+                        panic("Protection fault in kernel address space");
+                        halt_catch_fire(frame);
                 case 0x0E:
                         page_fault_handler(frame);
                         break;
                 default:
-                        kprintf("Unhandled exception: %s\n", exceptions[frame->vector]);
+                        panic("Unhandled exception");
                         halt_catch_fire(frame);
         }
 }
 
-void irq_dispatch(struct isr_frame *frame) {
-        pic_eoi(frame->vector-32);
-        return;
-}
-
-void interrupt_handler(struct isr_frame *frame) {
-        if (frame->vector < 32) {
-                exception_handler(frame);
-        } else if (frame->vector >= 32 && frame->vector < 48) {
-                irq_dispatch(frame);
+void interrupt_handler(struct isr_frame frame) {
+        if (frame.vector < 32) {
+                exception_handler(&frame);
+        } else if (frame.vector < 48) {
+                irq_dispatch(&frame);
         } else {
-                switch (frame->vector) {
+                switch (frame.vector) {
                         case 0x80:
-                                handle_syscall(frame);
+                                handle_syscall(&frame);
                                 break;
                         default:
-                                kprintf("Error: Unmapped interrupt: %d\n", frame->vector);
-                                halt_catch_fire(frame);
+                                panic("Unmapped interrupt");
+                                halt_catch_fire(&frame);
                                 __asm__ volatile("cli;hlt");
                 }
         }
@@ -149,5 +159,4 @@ void idt_install(void) {
         idt_set_gate(0x80, syscall_stub, 0x08, IDT_INTERRUPT);
 
         __asm__ volatile("lidt %0" : : "memory"(idtr));
-        __asm__ volatile("sti");
 }
