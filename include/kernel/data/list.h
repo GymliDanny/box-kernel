@@ -1,5 +1,5 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef KERNEL_LIST_H
+#define KERNEL_LIST_H
 
 #include <stddef.h>
 
@@ -9,12 +9,13 @@ struct list_head {
 };
 
 static inline void list_add(struct list_head *new, struct list_head *head) {
-        new->prev = head;
-        new->next = head->next;
+        struct list_head *temp = head;
+        while (temp->next != NULL)
+                temp = temp->next;
 
-        head->next = new;
-        if (head->prev != NULL)
-                head->prev->next = new;
+        temp->next = new;
+        new->prev = temp;
+        new->next = NULL;
 }
 
 static inline void list_del(struct list_head *item) {
