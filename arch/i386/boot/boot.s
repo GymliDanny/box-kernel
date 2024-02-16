@@ -92,15 +92,9 @@ load_page_dir:
 .global enable_paging
 .type enable_paging, @function
 enable_paging:
-        pushl %ebp
-        movl %esp, %ebp
-
         movl %cr0, %eax
         orl $0x80000001, %eax
         movl %eax, %cr0
-
-        movl %ebp, %esp
-        popl %ebp
         ret
 
 .global flush_gdt
@@ -116,13 +110,6 @@ flush_gdt:
         movw %ax, %ss
         jmp $0x08, $.flush
 .flush:
-        ret
-
-.global flush_tss
-.type flush_tss, @function
-flush_tss:
-        movw $0x28, %ax
-        ltr %ax
         ret
 
 .global jump_userspace
