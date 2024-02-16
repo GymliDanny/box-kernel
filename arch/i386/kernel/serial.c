@@ -5,6 +5,14 @@
 
 #define PORT 0x3f8
 
+static inline int _serial_received(void) {
+        return inb(PORT + 5) & 1;
+}
+
+static inline int _is_transmit_empty(void) {
+        return inb(PORT + 5) & 0x20;
+}
+
 int serial_init(void) {
         outb(PORT + 1, 0x00);
         outb(PORT + 3, 0x80);
@@ -23,20 +31,12 @@ int serial_init(void) {
         return 0;
 }
 
-int serial_recieved(void) {
-        return inb(PORT + 5) & 1;
+void serial_putchar(char c) {
+        while (_is_transmit_empty() == 0);
+        outb(PORT, c);
 }
 
-char read_serial(void) {
-        while (serial_recieved() == 0);
+char serial_getchar(void) {
+        while (_serial_received() == 0);
         return inb(PORT);
-}
-
-int is_transmit_empty(void) {
-        return inb(PORT + 5) & 0x20;
-}
-
-void write_serial(char a) {
-        while (is_transmit_empty() == 0);
-        outb(PORT, a);
 }

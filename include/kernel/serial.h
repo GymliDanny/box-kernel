@@ -1,15 +1,21 @@
-#ifndef SERIAL_H
-#define SERIAL_H
+#ifndef KERNEL_SERIAL_H
+#define KERNEL_SERIAL_H
 
-#include <kernel/string.h>
+#include <stdint.h>
+#include <stddef.h>
 
 int serial_init(void);
-char read_serial(void);
-void write_serial(char a);
+void serial_putchar(char c);
+char serial_getchar(void);
 
-static inline void serial_writestring(const char *str) {
-        for (size_t i = 0; i < strlen(str); i++)
-                write_serial(str[i]);
+static inline void serial_write(const char *data, size_t size) {
+        for (size_t i = 0; i < size; i++)
+                serial_putchar(data[i]);
+}
+
+static inline void serial_read(char *data, size_t size) {
+        for (size_t i = 0; i < size; i++)
+                data[i] = serial_getchar();
 }
 
 #endif
