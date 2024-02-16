@@ -86,7 +86,7 @@ install-disk: $(KERNEL)
 	mcopy -i a.img vmbox ::vmbox
 
 run: $(KERNEL)
-	qemu-system-i386 -kernel $(KERNEL)
+	qemu-system-i386 -kernel $(KERNEL) -serial stdio
 
 debug: $(KERNEL)
 	qemu-system-i386 -kernel $(KERNEL) -s -S
