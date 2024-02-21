@@ -80,9 +80,9 @@ install-disk: $(KERNEL)
 	bximage -q -func=create -fd=1.44M a.img
 	mkdosfs a.img
 	syslinux -i a.img
-	mcopy -i a.img libcom32.c32 ::libcom32.c32
-	mcopy -i a.img mboot.c32 ::mboot.c32
-	mcopy -i a.img syslinux.cfg ::syslinux.cfg
+	mcopy -i a.img img/libcom32.c32 ::libcom32.c32
+	mcopy -i a.img img/mboot.c32 ::mboot.c32
+	mcopy -i a.img img/syslinux.cfg ::syslinux.cfg
 	mcopy -i a.img vmbox ::vmbox
 
 run: $(KERNEL)

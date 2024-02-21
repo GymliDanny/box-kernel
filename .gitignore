@@ -23,6 +23,12 @@
 
 # Top-level files
 /vmbox
+/a.img
+/bochsrc
+/debug.log
+
+# Image generation files
+/img/
 
 # Don't ignore these!
 !.gitattributes

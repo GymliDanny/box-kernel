@@ -12,4 +12,4 @@ You will need the following to compile the Box kernel:
 
 ## Copyright
 
-Copyright (C) 2021 Danny Holman, dholman@gymli.xyz
+Copyright (C) 2024 Danny Holman, dholman@gymli.org
