@@ -1,32 +1,36 @@
 #include <kernel/syscall.h>
+#include <kernel/panic.h>
+#include <kernel/framebuffer.h>
+#include <kernel/keyboard.h>
+#include <kernel/string.h>
 #include <kernel/io.h>
 #include <stddef.h>
 
-int handle_syscall(struct isr_frame *frame) {
-        switch (frame->eax) {
-                case SYS_REBOOT:
-                        kprintf("REBOOT NOT SUPPORTED\n");
+extern char *keyboard_buffer;
+extern uint32_t kbuf_pos;
+
+void sys_read(struct regs *regs) {
+        if (regs->ebx == 1) {
+                while (kbuf_pos > regs->edx);
+                memcpy((char*)regs->ecx, keyboard_buffer, regs->edx);
+        }
+}
+
+void sys_write(struct regs *regs) {
+        if (regs->ebx == 0)
+                fb_write((char*)regs->ecx, regs->edx);
+}
+
+int handle_syscall(struct regs *regs) {
+        switch (regs->eax) {
+                case SYS_READ:
+                        sys_read(regs);
+                        break;
+                case SYS_WRITE:
+                        sys_write(regs);
                         break;
                 default:
-                        kprintf("Error: Invalid system call number: %d\n", frame->eax);
-                        halt_catch_fire(frame);
+                        panic("Invalid system call number");
         }
         return 0;
-}
-
-void dump_reg(struct isr_frame *frame) {
-        kprintf("Registers at interrupt:\n");
-        kprintf("\tEAX = %x\n", frame->eax);
-        kprintf("\tEBX = %x\n", frame->ebx);
-        kprintf("\tECX = %x\n", frame->ecx);
-        kprintf("\tEDX = %x\n", frame->edx);
-        kprintf("\tESI = %x\n", frame->esi);
-        kprintf("\tEDI = %x\n", frame->edi);
-        kprintf("\tEIP = %x\n", frame->eip);
-        kprintf("Current code selector: %x\n", frame->cs);
-}
-
-void dump_stack(uint32_t esp, size_t len) {
-        for (uint32_t i = 0; i < len; i++)
-                kprintf("%x:\t%x\n", esp+i, *(uint32_t*)(esp+i));
 }

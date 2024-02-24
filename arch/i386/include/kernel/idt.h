@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-// IDT Flags
 #define SEGMENT_PRESENT         0x80
 #define SEGMENT_RING0           0x00
 #define SEGMENT_RING3           0x60

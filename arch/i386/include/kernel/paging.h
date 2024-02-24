@@ -1,7 +1,7 @@
 #ifndef I386_PAGING_H
 #define I386_PAGING_H
 
-#include <kernel/isr.h>
+#include <kernel/asm.h>
 #include <kernel/multiboot.h>
 #include <kernel/data/list.h>
 #include <stdint.h>
@@ -25,21 +25,11 @@
 
 #define PAGE_SIZE       4096
 
-#define DMA_BITMAP_SZ   128
-#define BDY_BITMAP_SZ   32640
-
-struct pfa_buddy {
-        uintptr_t start;
-        uintptr_t *bitmap;
-        uint8_t size;
-        struct list_head list;
-};
-
-void load_page_dir(uintptr_t pd_addr);
-void enable_paging(void);
+uint32_t* init_page_table(uint32_t flags);
+void enable_paging(uintptr_t pd_addr);
 
 void paging_init(void);
-void page_fault_handler(struct isr_frame *frame);
+void page_fault_handler(struct regs *regs);
 
 uint32_t get_vaddr(uintptr_t paddr);
 

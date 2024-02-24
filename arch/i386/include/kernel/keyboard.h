@@ -1,7 +1,6 @@
 #ifndef I386_KEYBOARD_H
 #define I386_KEYBOARD_H
 
-#include <kernel/isr.h>
 #include <stdint.h>
 
 #define KB_STAT         0x64
@@ -28,6 +27,6 @@
 #define KB_DEL          0xE9
 
 char keyboard_getchar(void);
-void keyboard_handler(struct isr_frame *frame);
+void keyboard_handler(void);
 
 #endif

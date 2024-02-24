@@ -5,7 +5,7 @@
 
 static uint32_t num_ticks = 0;
 
-void timer_handler(struct isr_frame *frame) {
+void timer_handler(struct regs *regs) {
         num_ticks++;
         if (num_ticks == 3) {
                 num_ticks = 0;
@@ -14,12 +14,12 @@ void timer_handler(struct isr_frame *frame) {
 }
 
 void timer_init(void) {
-        asm __volatile__("cli");
+        disable_ints();
         int divisor = 1193182 / 100;
         outb(0x43, 0x34);
         outb(0x40, divisor && 0xFF);
         outb(0x40, divisor && 0xFF00 >> 8);
-        asm __volatile__("sti");
+        enable_ints();
 
         //uint8_t read = 0;
         //outb(0x43, 0xE2);

@@ -1,7 +1,8 @@
+#include <kernel/idt.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
 #include <kernel/gdt.h>
-#include <kernel/isr.h>
+#include <kernel/asm.h>
 #include <kernel/io.h>
 #include <kernel/pic.h>
 #include <kernel/string.h>
@@ -44,51 +45,40 @@ const char* exceptions[] = {
         "RESERVED"
 };
 
-__attribute__((noreturn))
-void halt_catch_fire(struct isr_frame *frame) {
-        dump_reg(frame);
-        kprintf("ERRNO=%x\n", frame->errno);
-        __asm__ volatile("cli;hlt");
-        while (1);
-}
-
-void exception_handler(struct isr_frame *frame) {
-        switch (frame->vector) {
+void exception_handler(struct regs *regs) {
+        switch (regs->isr_vector) {
                 case 0x00:
                         panic("Division by zero in kernel address space");
-                        halt_catch_fire(frame);
+                        break;
                 case 0x06:
                         panic("Invalid opcode in kernel address space");
-                        halt_catch_fire(frame);
+                        break;
                 case 0x08:
                         panic("Double fault in interrupt handler");
-                        halt_catch_fire(frame);
+                        break;
                 case 0x0D:
                         panic("Protection fault in kernel address space");
-                        halt_catch_fire(frame);
+                        break;
                 case 0x0E:
-                        page_fault_handler(frame);
+                        page_fault_handler(regs);
                         break;
                 default:
                         panic("Unhandled exception");
-                        halt_catch_fire(frame);
         }
 }
 
-void interrupt_handler(struct isr_frame frame) {
-        if (frame.vector < 32) {
-                exception_handler(&frame);
-        } else if (frame.vector < 48) {
-                irq_dispatch(&frame);
+void interrupt_handler(struct regs regs) {
+        if (regs.isr_vector < 32) {
+                exception_handler(&regs);
+        } else if (regs.isr_vector < 48) {
+                irq_dispatch(&regs);
         } else {
-                switch (frame.vector) {
+                switch (regs.isr_vector) {
                         case 0x80:
-                                handle_syscall(&frame);
+                                handle_syscall(&regs);
                                 break;
                         default:
                                 panic("Unmapped interrupt");
-                                halt_catch_fire(&frame);
-                                __asm__ volatile("cli;hlt");
                 }
         }
 }

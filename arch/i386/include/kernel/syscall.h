@@ -1,7 +1,8 @@
 #ifndef I386_SYSCALL_H
 #define I386_SYSCALL_H
 
-#include <kernel/isr.h>
+#include <kernel/asm.h>
+#include <stdint.h>
 #include <stddef.h>
 
 // Unix standard calls
@@ -23,11 +24,10 @@
 #define SYS_LINK        16
 #define SYS_MKDIR       17
 #define SYS_CLOSE       18
+#define SYS_EXEC        19
 
 #define SYS_REBOOT      88
 
-int handle_syscall(struct isr_frame *frame);
-void dump_reg(struct isr_frame *frame);
-void dump_stack(uintptr_t esp, size_t len);
+int handle_syscall(struct regs *regs);
 
 #endif

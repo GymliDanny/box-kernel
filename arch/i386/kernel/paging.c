@@ -10,63 +10,42 @@ static uintptr_t kend = (uintptr_t)&_kernel_end - 0xC0000000;
 
 static uintptr_t page_directory[1024] __attribute__((aligned(PAGE_SIZE)));
 static uintptr_t first_page_table[1024] __attribute__((aligned(PAGE_SIZE)));
+static uintptr_t second_page_table[1024] __attribute__((aligned(PAGE_SIZE)));
 
 static int paging_enabled = 0;
 
-static uint32_t dma_zone_bitmap[DMA_BITMAP_SZ];
-static uint32_t buddy_bitmap[BDY_BITMAP_SZ];
-static struct pfa_buddy first_buddy;
-
-static void _pfa_init(void) {
-        first_buddy.start = 0x01000000;
-        first_buddy.bitmap = buddy_bitmap;
+uint32_t* init_page_table(uint32_t flags) {
+        uint32_t *ret = kmalloc(sizeof(uint32_t)*1024);
+        for (int i = 0; i < 1024; i++)
+                ret[i] = flags;
 }
 
-static void _pfa_alloc(uintptr_t paddr) {
-        uintptr_t index = (paddr & 0xFFFFF000) / 4096 / 32;
-        uintptr_t bit = (paddr & 0xFFFFF000) / 4096 % 32;
-        uint32_t *bitmap;
-        if (paddr < 0x01000000)
-                bitmap = dma_zone_bitmap;
-        else
-                bitmap = first_buddy.bitmap;
-
-        bitmap[index] |= (1 << bit);
-}
-
-static void _pfa_free(uintptr_t paddr) {
-        uintptr_t index = (paddr & 0xFFFFF000) / 4096 / 32;
-        uintptr_t bit = (paddr & 0xFFFFF000) / 4096 % 32;
-        uint32_t *bitmap;
-        if (paddr < 0x01000000)
-                bitmap = dma_zone_bitmap;
-        else
-                bitmap = first_buddy.bitmap;
-
-        bitmap[index] &= ~(1 << bit);
+uint32_t* init_page_dir(uint32_t flags) {
+        uint32_t *ret = init_page_table(flags);
+        ret[0] = ((uintptr_t)&first_page_table - 0xC0000000) | 3;
+        ret[768] = ((uintptr_t)&second_page_table - 0xC0000000) | 3;
 }
 
 void paging_init(void) {
-        _pfa_init();
-        for (int i = 0; i < 1024; i++)
-                page_directory[i] = 0x00000002;
+        for (int i = 0; i < 1024; i++) {
+                page_directory[i] = PD_RW;
+                first_page_table[i] = PD_RW;
+                second_page_table[i] = PD_RW;
+        }
 
         page_directory[1023] = ((uintptr_t)&page_directory - 0xC0000000) | 3;
         page_directory[0] = ((uintptr_t)&first_page_table - 0xC0000000) | 3;
-        page_directory[768] = ((uintptr_t)&first_page_table - 0xC0000000) | 3;
-        for (uintptr_t i = kstart; i < kend; i += 4096) {
-                _pfa_alloc(get_vaddr(i));
-                map_page(page_directory, i, get_vaddr(i), 0x003);
-        }
+        page_directory[768] = ((uintptr_t)&second_page_table - 0xC0000000) | 3;
+        for (uintptr_t i = kstart; i < kend; i += PAGE_SIZE)
+                map_page(page_directory, i, i + 0xC0000000, 0x003);
 
-        load_page_dir(((uintptr_t)&page_directory) - 0xC0000000);
-        enable_paging();
+        enable_paging(((uintptr_t)&page_directory) - 0xC0000000);
         paging_enabled = 1;
         return;
 }
 
-void page_fault_handler(struct isr_frame *frame) {
-        uintptr_t errno = frame->errno;
+void page_fault_handler(struct regs *regs) {
+        uintptr_t errno = regs->isr_err;
 
         uintptr_t fault_addr;
         __asm__ volatile("movl %%cr2, %0" : "=r"(fault_addr));
@@ -76,9 +55,9 @@ void page_fault_handler(struct isr_frame *frame) {
         int reserved = errno & ERR_RESERVED;
         int ifetch = errno & ERR_INST;
 
+        uintptr_t first_free;
         if (!present)
-                _pfa_alloc(fault_addr);
-                map_page(NULL, fault_addr, fault_addr, 0x003);
+                map_page(regs->cr3, fault_addr, fault_addr, PD_PRES | PD_RW | PD_USR);
         if (user)
                 panic("Usermode attempted to read supervisor page");
         if (rw)
@@ -89,8 +68,17 @@ void page_fault_handler(struct isr_frame *frame) {
                 panic("Task paging instruction fetch failure");
 }
 
-uintptr_t get_vaddr(uintptr_t paddr) {
-        return paddr + 0xC0000000;
+uintptr_t get_paddr(uintptr_t vaddr) {
+        uint32_t pdindex = (uint32_t)vaddr >> 22;
+        uint32_t ptindex = (uint32_t)vaddr >> 12 & 0x03FF;
+
+        uint32_t *pd = (uint32_t*)0xFFFFF000;
+        if (*pd & PD_PRES != 1)
+                return NULL;
+        uint32_t *pt = ((uint32_t*)0xFFC00000) + (0x400 * pdindex);
+        if (*pt & PD_PRES != 1)
+                return NULL;
+        return (uintptr_t)((pt[ptindex] & ~0xFFF) + ((uint32_t)vaddr & 0xFFF));
 }
 
 void map_page(uint32_t *pd, uintptr_t paddr, uintptr_t vaddr, uint32_t flags) {

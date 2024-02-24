@@ -100,6 +100,9 @@ static uint8_t* keymaps[4] = {
         keymap_control,
 };
 
+char keyboard_buffer[4096];
+int kbuf_pos = 0;
+
 char keyboard_getchar(void) {
         static int shift = 0;
         uint8_t st = inb(KB_STAT);
@@ -133,10 +136,9 @@ char keyboard_getchar(void) {
         return c;
 }
 
-void keyboard_handler(struct isr_frame *frame) {
+void keyboard_handler(void) {
         char c = keyboard_getchar();
-        // TODO: actually put this in a buffer
         if (c != -1)
-                fb_putchar(c);
+                keyboard_buffer[kbuf_pos++];
         return;
 }
