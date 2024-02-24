@@ -82,7 +82,7 @@ load_page_dir:
         pushl %ebp
         movl %esp, %ebp
 
-        movl 8(%ebp), %eax
+        movl 8(%esp), %eax
         movl %eax, %cr3
 
         movl %ebp, %esp
@@ -111,20 +111,3 @@ flush_gdt:
         jmp $0x08, $.flush
 .flush:
         ret
-
-.global jump_userspace
-.type jump_userspace, @function
-jump_userspace:
-        movw $0x23, %ax
-        movw %ax, %ds
-        movw %ax, %es
-        movw %ax, %fs
-        movw %ax, %gs
-
-        pushl $0x23
-        pushl %esp
-        pushf
-        orl $0x200, (%esp)
-        pushl $0x1B
-        pushl test_user_function
-        iret
