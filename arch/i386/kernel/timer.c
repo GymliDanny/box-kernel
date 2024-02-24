@@ -1,7 +1,6 @@
 #include <kernel/timer.h>
 #include <kernel/asm.h>
 #include <kernel/pic.h>
-#include <kernel/sched.h>
 
 static uint32_t num_ticks = 0;
 

@@ -31,6 +31,14 @@ void* memcpy(void* __restrict dest, const void* __restrict src, size_t n) {
         return dest;
 }
 
+char* strncpy(char* __restrict dest, const char* __restrict src, size_t n) {
+        for (int i = 0; i < n; i++) {
+                if (src[i] == '\0')
+                        break;
+                dest[i] = src[i];
+        }
+}
+
 char* strcpy(char* __restrict dest, const char* __restrict src) {
         if (strlen(src) > strlen(dest))
                 return NULL;
