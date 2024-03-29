@@ -1,7 +1,7 @@
 #ifndef KERNEL_RINGBUF_H
 #define KERNEL_RINGBUF_H
 
-#include <kernel/mem.h>
+#include <kernel/kmalloc.h>
 #include <kernel/string.h>
 #include <stdint.h>
 

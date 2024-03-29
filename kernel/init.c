@@ -1,4 +1,5 @@
 #include <kernel/io.h>
+#include <kernel/sched.h>
 #include <kernel/kmalloc.h>
 #include <kernel/string.h>
 #include <kernel/serial.h>
@@ -21,7 +22,10 @@ void process_cmd(char *cmdline) {
 }
 
 void kernel_main(char *cmdline) {
+        kmalloc_init();
         kprintf("Box Kernel version %s\n", VERSION);
         serial_init();
-        kmalloc_init();
+        sched_init();
+
+        //jump_userspace();
 }
