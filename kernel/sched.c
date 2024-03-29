@@ -11,6 +11,8 @@ static struct list_head *wait_queue;
 static struct task_block *cur = NULL;
 static long int next_id = 1;
 
+static int scheduler_enabled = 0;
+
 static void _enqueue(struct list_head *queue, struct task_block *task) {
         struct list_head *temp = queue;
         while (temp->next != NULL)
@@ -35,9 +37,13 @@ void sched_init(void) {
         cur = boot_task;
 
         switch_thread(boot_task->threads, boot_task->threads);
+        scheduler_enabled = 1;
 }
 
 void schedule_next(void) {
+        if (scheduler_enabled == 0)
+                return;
+
         struct task_block *task = _dequeue(ready_queue);
         if (task == NULL)
                 return;
