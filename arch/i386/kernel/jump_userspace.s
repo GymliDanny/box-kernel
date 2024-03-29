@@ -18,12 +18,4 @@ jump_userspace:
         call set_kernel_esp
         addl $4, %esp
 
-        movl $0x0004, %eax
-        orl $0x0002, %eax
-        pushl %eax
-        call init_page_dir
-        addl $4, %esp
-
-        movl %eax, %cr3
-
         iret

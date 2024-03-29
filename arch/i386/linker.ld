@@ -26,9 +26,5 @@ SECTIONS {
                 *(.bootstrap_stack)
         }
 
-        .usertext ALIGN(4K) : AT(ADDR(.usertext) - 0xC0000000) {
-                *(.usertext)
-        }
-
         _kernel_end = .;
 }

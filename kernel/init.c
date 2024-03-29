@@ -1,5 +1,5 @@
 #include <kernel/io.h>
-#include <kernel/mem.h>
+#include <kernel/kmalloc.h>
 #include <kernel/string.h>
 #include <kernel/serial.h>
 
@@ -8,6 +8,7 @@ void jump_userspace(void);
 char rootfs[1024];
 
 int start_init(int argc, char* argv[]) {
+        while (1);
         return 0;
 }
 
@@ -22,4 +23,5 @@ void process_cmd(char *cmdline) {
 void kernel_main(char *cmdline) {
         kprintf("Box Kernel version %s\n", VERSION);
         serial_init();
+        kmalloc_init();
 }

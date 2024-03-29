@@ -23,9 +23,10 @@
 #define ERR_RESERVED    0x8
 #define ERR_INST        0x10
 
-#define PAGE_SIZE       4096
+#define PGROUNDUP(size) (((size)+PAGE_SIZE-1) & ~(PAGE_SIZE-1))
+#define PGROUNDDN(size) (((size)) & ~(PAGE_SIZE-1))
 
-uint32_t* init_page_table(uint32_t flags);
+int init_page_directory(uintptr_t *pd, int user);
 void enable_paging(uintptr_t pd_addr);
 
 void paging_init(void);

@@ -29,7 +29,6 @@ KERNEL_OBJS=$(KERNEL_ARCH_OBJS) \
 	    kernel/string.o \
 	    kernel/io.o \
 	    kernel/panic.o \
-	    kernel/mem.o \
 
 OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/crtbegin.o \

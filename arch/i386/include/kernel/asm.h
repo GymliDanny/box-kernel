@@ -3,6 +3,23 @@
 
 #include <stdint.h>
 
+extern uintptr_t _kernel_start;
+extern uintptr_t _kernel_end;
+#define KSTART          ((uintptr_t)&_kernel_start)
+#define KEND            ((uintptr_t)&_kernel_end - 0xC0000000)
+
+#define HIMEM_START     0x00100000
+#define PAGE_SIZE       4096
+
+struct thread_block {
+        uint32_t esp;
+        uint32_t cr3;
+        unsigned int tid;
+        unsigned int tgid;
+        unsigned int state;
+        struct thread_block *next;
+};
+
 struct regs {
         uint32_t cr4;
         uint32_t cr3;
@@ -87,17 +104,18 @@ static inline uint8_t inb(uint16_t port) {
 
 static inline void enable_ints(void) {
         __asm__ volatile("sti");
-        return;
 }
 
 static inline void disable_ints(void) {
         __asm__ volatile("cli");
-        return;
 }
 
 static inline void flush_tss(void) {
         __asm__ volatile("movw $0x28, %ax; ltr %ax");
-        return;
+}
+
+static inline void invlpg(void *addr) {
+        __asm__ volatile("invlpg (%0)" : : "b"(addr) : "memory");
 }
 
 #endif
