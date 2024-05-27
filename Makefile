@@ -36,15 +36,23 @@ KERNEL_OBJS=$(KERNEL_ARCH_OBJS) \
 	    kernel/sched.o \
 	    kernel/kthread.o \
 
+DRIVER_OBJS=drivers/video/framebuffer.o \
+	    drivers/input/keyboard.o \
+	    drivers/pci/pci.o \
+	    drivers/pci/ide.o \
+	    drivers/tty/tty_vga.o \
+
 OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/crtbegin.o \
      $(KERNEL_OBJS) \
+     $(DRIVER_OBJS) \
      $(LIBK_OBJS) \
      $(ARCHDIR)/crtend.o \
      $(ARCHDIR)/boot/crtn.o \
 
 LINK_LIST=$(LDFLAGS) \
 	  $(KERNEL_OBJS) \
+	  $(DRIVER_OBJS) \
 	  $(LIBK_OBJS) \
 	  $(LIBS) \
 

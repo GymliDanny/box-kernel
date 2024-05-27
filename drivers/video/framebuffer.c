@@ -1,13 +1,12 @@
-#include <kernel/vga.h>
+#include <kernel/video/framebuffer.h>
+#include <kernel/video/vga.h>
+#include <kernel/asm.h>
+#include <kernel/kthread.h>
 #include <kernel/paging.h>
 #include <kernel/pic.h>
-#include <kernel/string.h>
+#include <libk/string.h>
 #include <stddef.h>
 #include <stdint.h>
-
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
-static uint16_t *const VGA_MEMORY = (uint16_t*)0xC03FF000;
 
 static size_t fb_row;
 static size_t fb_column;
@@ -44,8 +43,6 @@ void _fb_scroll(void) {
 }
 
 void fb_init(void) {
-        map_page(NULL, 0xB8000, (uintptr_t)VGA_MEMORY, 0x003);
-
         fb_row = 0;
         fb_column = 0;
         fb_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
@@ -65,6 +62,13 @@ void fb_setcolor(uint8_t color) {
 void fb_setpos(int x, int y) {
         fb_row = y;
         fb_column = x;
+        _update_cursor(fb_column, fb_row+1);
+}
+
+void fb_offsetpos(int dx, int dy) {
+        fb_row += dy;
+        fb_column += dx;
+        _update_cursor(fb_column, fb_row+1);
 }
 
 void fb_putchar(char c) {

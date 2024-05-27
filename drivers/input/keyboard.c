@@ -1,8 +1,9 @@
-#include <kernel/keyboard.h>
-#include <kernel/framebuffer.h>
+#include <kernel/input/keyboard.h>
+#include <kernel/tty/tty_vga.h>
+#include <kernel/tty.h>
+#include <kernel/kthread.h>
 #include <kernel/pic.h>
-
-#define C(k)            (k - '@')
+#include <libk/string.h>
 
 static uint8_t keymap_modifiers[256] = {
         [0x1D] KB_CTL,
@@ -100,9 +101,6 @@ static uint8_t* keymaps[4] = {
         keymap_control,
 };
 
-char keyboard_buffer[4096];
-int kbuf_pos = 0;
-
 char keyboard_getchar(void) {
         static int shift = 0;
         uint8_t st = inb(KB_STAT);
@@ -136,9 +134,9 @@ char keyboard_getchar(void) {
         return c;
 }
 
-void keyboard_handler(void) {
+void keyboard_handler(struct isr_frame *frame) {
         char c = keyboard_getchar();
         if (c != -1)
-                keyboard_buffer[kbuf_pos++];
+                tty_getchar(c);
         return;
 }
