@@ -1,6 +1,7 @@
 #ifndef I386_ASM_H
 #define I386_ASM_H
 
+#include <kernel/gdt.h>
 #include <stdint.h>
 
 extern uintptr_t _kernel_start;
@@ -8,19 +9,30 @@ extern uintptr_t _kernel_end;
 #define KSTART          ((uintptr_t)&_kernel_start)
 #define KEND            ((uintptr_t)&_kernel_end - 0xC0000000)
 
-#define HIMEM_START     0x00100000
 #define PAGE_SIZE       4096
 
-struct thread_block {
-        uint32_t esp;
-        uint32_t cr3;
-        unsigned int tid;
-        unsigned int tgid;
-        unsigned int state;
-        struct thread_block *next;
-};
+#define PCI_CONFIG_ADDR 0xCF8
+#define PCI_CONFIG_DATA 0xCFC
+
+#define COM_PORT        0x3F8
 
 struct regs {
+        uint32_t eax;
+        uint32_t ebx;
+        uint32_t ecx;
+        uint32_t edx;
+        uint32_t esi;
+        uint32_t edi;
+        uint32_t ebp;
+        uint32_t esp;
+
+        uint32_t cr0;
+        uint32_t cr2;
+        uint32_t cr3;
+        uint32_t cr4;
+};
+
+struct isr_frame {
         uint32_t cr4;
         uint32_t cr3;
         uint32_t cr2;
@@ -92,13 +104,38 @@ void irq_stub_15(void);
 
 void syscall_stub(void);
 
+void aquire_lock(int *lock);
+void release_lock(int *lock);
+
+void enable_paging(uint32_t new_cr3);
+
 static inline void outb(uint16_t port, uint8_t value) {
         __asm__ volatile("outb %0, %1" : : "a"(value), "Nd"(port));
+}
+
+static inline void outw(uint16_t port, uint16_t value) {
+        __asm__ volatile("outw %0, %1" : : "a"(value), "Nd"(port));
+}
+
+static inline void outl(uint16_t port, uint32_t value) {
+        __asm__ volatile("outl %0, %1" : : "a"(value), "Nd"(port));
 }
 
 static inline uint8_t inb(uint16_t port) {
         uint8_t ret;
         __asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
+        return ret;
+}
+
+static inline uint16_t inw(uint16_t port) {
+        uint16_t ret;
+        __asm__ volatile("inw %1, %0" : "=a"(ret) : "Nd"(port));
+        return ret;
+}
+
+static inline uint32_t inl(uint16_t port) {
+        uint32_t ret;
+        __asm__ volatile("inl %1, %0" : "=a"(ret) : "Nd"(port));
         return ret;
 }
 
