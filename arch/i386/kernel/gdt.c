@@ -1,6 +1,6 @@
 #include <kernel/gdt.h>
 #include <kernel/asm.h>
-#include <kernel/string.h>
+#include <libk/string.h>
 
 struct gdt_entry desc[6];
 struct gdt_ptr gp;
@@ -53,6 +53,6 @@ void gdt_install(void) {
         __asm__ volatile("movl %%esp, %0" : "=r"(esp));
         write_tss(5, 0x10, esp);
 
-        flush_gdt();
+        flush_gdt(&gp);
         flush_tss();
 }

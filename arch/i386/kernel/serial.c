@@ -1,6 +1,6 @@
 #include <kernel/serial.h>
 #include <kernel/pic.h>
-#include <kernel/string.h>
+#include <libk/string.h>
 #include <stddef.h>
 
 #define PORT 0x3f8

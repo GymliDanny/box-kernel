@@ -3,10 +3,10 @@
 #include <kernel/panic.h>
 #include <kernel/gdt.h>
 #include <kernel/asm.h>
-#include <kernel/io.h>
 #include <kernel/pic.h>
-#include <kernel/string.h>
 #include <kernel/paging.h>
+#include <libk/io.h>
+#include <libk/string.h>
 #include <stdint.h>
 
 __attribute__((aligned(0x10)))
@@ -45,8 +45,8 @@ const char* exceptions[] = {
         "RESERVED"
 };
 
-void exception_handler(struct regs *regs) {
-        switch (regs->isr_vector) {
+void exception_handler(struct isr_frame *frame) {
+        switch (frame->isr_vector) {
                 case 0x00:
                         panic("Division by zero in kernel address space");
                         break;
@@ -60,22 +60,22 @@ void exception_handler(struct regs *regs) {
                         panic("Protection fault in kernel address space");
                         break;
                 case 0x0E:
-                        page_fault_handler(regs);
+                        page_fault_handler(frame);
                         break;
                 default:
                         panic("Unhandled exception");
         }
 }
 
-void interrupt_handler(struct regs regs) {
-        if (regs.isr_vector < 32) {
-                exception_handler(&regs);
-        } else if (regs.isr_vector < 48) {
-                irq_dispatch(&regs);
+void interrupt_handler(struct isr_frame frame) {
+        if (frame.isr_vector < 32) {
+                exception_handler(&frame);
+        } else if (frame.isr_vector < 48) {
+                irq_dispatch(&frame);
         } else {
-                switch (regs.isr_vector) {
+                switch (frame.isr_vector) {
                         case 0x80:
-                                handle_syscall(&regs);
+                                handle_syscall(&frame);
                                 break;
                         default:
                                 panic("Unmapped interrupt");

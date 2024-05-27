@@ -50,6 +50,4 @@ void write_tss(int num, uint32_t ss0, uint32_t esp0);
 void set_kernel_esp(uint32_t esp);
 void gdt_install(void);
 
-void flush_gdt(void);
-
 #endif
