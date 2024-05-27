@@ -1,5 +1,5 @@
-#ifndef KERNEL_LIST_H
-#define KERNEL_LIST_H
+#ifndef LIBK_LIST_H
+#define LIBK_LIST_H
 
 #include <stddef.h>
 

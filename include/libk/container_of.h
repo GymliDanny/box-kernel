@@ -1,5 +1,5 @@
-#ifndef KERNEL_CONTAINER_OF_H
-#define KERNEL_CONTAINER_OF_H
+#ifndef LIBK_CONTAINER_OF_H
+#define LIBK_CONTAINER_OF_H
 
 #ifndef container_of
 #define container_of(ptr, type, member) ({                              \

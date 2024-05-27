@@ -1,5 +1,5 @@
-#ifndef KERNEL_RINGBUF_H
-#define KERNEL_RINGBUF_H
+#ifndef LIBK_RINGBUF_H
+#define LIBK_RINGBUF_H
 
 #include <kernel/kmalloc.h>
 #include <kernel/string.h>

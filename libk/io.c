@@ -1,10 +1,7 @@
-#include <kernel/io.h>
-#include <kernel/framebuffer.h>
-#include <kernel/data/ringbuf.h>
-#include <kernel/string.h>
-
-static int ringbuf_init = 0;
-static struct ringbuf rb;
+#include <libk/io.h>
+#include <libk/string.h>
+#include <kernel/video/framebuffer.h>
+#include <kernel/tty/tty_vga.h>
 
 char* convert(unsigned int num, int base) {
         static char rep[] = "0123456789ABCDEF";
@@ -23,15 +20,11 @@ char* convert(unsigned int num, int base) {
 }
 
 int vkprintf(const char *fmt, va_list args) {
-        if (ringbuf_init == 0) {
-                rb_init(&rb, 1024, 4096);
-                ringbuf_init = 1;
-        }
-
         char *s;
         int i;
 
         char buffer[4096];
+        memset(buffer, 0, 4096);
         for (size_t n = 0; n < strlen(fmt); n++) {
                 if (fmt[n] != '%') {
                         buffer[strlen(buffer)] = fmt[n];
@@ -67,7 +60,8 @@ int vkprintf(const char *fmt, va_list args) {
                                 break;
                 }
         }
-        rb_push_back(&rb, buffer, strlen(buffer));
+        //tty_write(buffer, strlen(buffer));
+        fb_write(buffer, strlen(buffer));
         memset(buffer, 0, 4096);
         return 0;
 }

@@ -9,7 +9,7 @@ ARCH?=i386
 CC:=i686-elf-gcc
 VERSION:="$(shell git describe --abbrev=4 --dirty --always --tags)"
 INCLUDE:=$(INCLUDE)
-CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb
+CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb -fstack-protector-all -O0
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)
 ARCH:=$(ARCH)
@@ -24,21 +24,28 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL=vmbox
 
+LIBK_OBJS=libk/string.o \
+	  libk/io.o \
+	  libk/stack_protector.o \
+	  libk/ubsan.o \
+
 KERNEL_OBJS=$(KERNEL_ARCH_OBJS) \
 	    kernel/init.o \
-	    kernel/string.o \
-	    kernel/io.o \
 	    kernel/panic.o \
+	    kernel/vfs.o \
 	    kernel/sched.o \
+	    kernel/kthread.o \
 
 OBJS=$(ARCHDIR)/boot/crti.o \
      $(ARCHDIR)/crtbegin.o \
      $(KERNEL_OBJS) \
+     $(LIBK_OBJS) \
      $(ARCHDIR)/crtend.o \
      $(ARCHDIR)/boot/crtn.o \
 
 LINK_LIST=$(LDFLAGS) \
 	  $(KERNEL_OBJS) \
+	  $(LIBK_OBJS) \
 	  $(LIBS) \
 
 .PHONY: all clean install install-headers install-kernel
@@ -87,9 +94,9 @@ install-disk: $(KERNEL)
 	mcopy -i a.img vmbox ::vmbox
 
 run: $(KERNEL)
-	qemu-system-i386 -kernel $(KERNEL) -serial stdio
+	qemu-system-i386 -kernel $(KERNEL) -serial stdio -m 3G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh"
 
 debug: $(KERNEL)
-	qemu-system-i386 -kernel $(KERNEL) -s -S
+	qemu-system-i386 -kernel $(KERNEL) -s -S -m 3G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh" &
 
 -include $(OBJS:.o=.d)

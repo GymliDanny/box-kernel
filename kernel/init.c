@@ -1,31 +1,35 @@
-#include <kernel/io.h>
+#include <libk/io.h>
+#include <libk/string.h>
+#include <libk/kmalloc.h>
 #include <kernel/sched.h>
-#include <kernel/kmalloc.h>
-#include <kernel/string.h>
+#include <kernel/kthread.h>
+#include <kernel/pci.h>
 #include <kernel/serial.h>
 
 void jump_userspace(void);
 
 char rootfs[1024];
-
-int start_init(int argc, char* argv[]) {
-        while (1);
-        return 0;
-}
+char init_bin[1024];
+int gdbstub = 0;
 
 void process_cmd(char *cmdline) {
         char *token = strtok(cmdline, " ");
         while (token != NULL) {
                 if (strncmp(token, "root=", 5) == 0)
-                        strcpy(rootfs, &token[6]);
+                        strcpy(rootfs, &token[5]);
+                if (strncmp(token, "init=", 5) == 0)
+                        strcpy(init_bin, &token[5]);
+                if (strncmp(token, "gdb", 3) == 0)
+                        gdbstub = 1;
+                token = strtok(NULL, " ");
         }
 }
 
 void kernel_main(char *cmdline) {
-        kmalloc_init();
-        kprintf("Box Kernel version %s\n", VERSION);
+        kprintf("Box kernel version %s\n", VERSION);
+        process_cmd(cmdline);
+
         serial_init();
         sched_init();
-
-        //jump_userspace();
+        //pci_check_buses();
 }

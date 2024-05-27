@@ -1,4 +1,4 @@
-#include <kernel/string.h>
+#include <libk/string.h>
 
 int memcmp(const void *str1, const void *str2, size_t n) {
         unsigned char const *p1 = str1;
@@ -32,21 +32,24 @@ void* memcpy(void* __restrict dest, const void* __restrict src, size_t n) {
 }
 
 char* strncpy(char* __restrict dest, const char* __restrict src, size_t n) {
-        for (int i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
                 if (src[i] == '\0')
                         break;
                 dest[i] = src[i];
         }
+        return dest;
 }
 
 char* strcpy(char* __restrict dest, const char* __restrict src) {
-        if (strlen(src) > strlen(dest))
-                return NULL;
         return (char*)memcpy(dest, src, strlen(src));
 }
 
 char* strcat(char* __restrict dest, const char* __restrict src) {
         return (char*)memcpy(&dest[strlen(dest)], src, strlen(src));
+}
+
+char* strncat(char* __restrict dest, const char* __restrict src, size_t n) {
+        return (char*)memcpy(&dest[strlen(dest)], src, n);
 }
 
 void* memmove(void* __restrict dest, const void* __restrict src, size_t n) {

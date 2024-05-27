@@ -1,14 +1,15 @@
-#ifndef KERNEL_KMALLOC_H
-#define KERNEL_KMALLOC_H
+#ifndef LIBK_KMALLOC_H
+#define LIBK_KMALLOC_H
 
 #include <stdint.h>
 #include <stddef.h>
 
 struct mem_block {
-        uintptr_t start;
+        void *start;
         size_t size;
         int alloc;
         struct mem_block *next;
+        struct mem_block *prev;
 };
 
 void kmalloc_init(void);

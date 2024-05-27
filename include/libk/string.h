@@ -1,5 +1,5 @@
-#ifndef STRING_H
-#define STRING_H
+#ifndef LIBK_STRING_H
+#define LIBK_STRING_H
 
 #include <stddef.h>
 
@@ -12,6 +12,7 @@ int strcmp(const char *str1, const char *str2);
 size_t strlen(const char *str);
 char* strncpy(char* __restrict dest, const char* __restrict src, size_t n);
 char* strcpy(char* __restrict dest, const char* __restrict src);
+char* strncat(char* __restrict dest, const char* __restrict src, size_t n);
 char* strcat(char* __restrict dest, const char* __restrict src);
 char* strtok(char* __restrict str, const char* __restrict delim);
 
