@@ -64,14 +64,13 @@ _start:
 
 .section .text
 
-4:      movl $0, boot_page_directory + 0
-
-        movl %cr3, %ecx
+4:      movl %cr3, %ecx
         movl %ecx, %cr3
 
         movl $stack_top, %esp
         and $-16, %esp
 
+        pushl $boot_page_directory
         pushl %ebx
         pushl %eax
         call i386_entry

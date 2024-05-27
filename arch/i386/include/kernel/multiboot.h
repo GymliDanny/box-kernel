@@ -99,6 +99,4 @@ struct mboot_mmap_entry {
         uint32_t type;
 } __attribute__((packed));
 
-void i386_entry(uint32_t mboot_magic, struct mboot_info *header);
-
 #endif
