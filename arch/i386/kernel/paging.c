@@ -5,7 +5,6 @@
 #include <kernel/syscall.h>
 #include <libk/io.h>
 #include <libk/string.h>
-#include <libk/errno.h>
 
 uintptr_t *kpgdir = NULL;
 
