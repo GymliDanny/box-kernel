@@ -1,8 +1,7 @@
-#include <kernel/kmalloc.h>
+#include <libk/kmalloc.h>
 #include <kernel/paging.h>
 #include <kernel/pmem.h>
 #include <kernel/asm.h>
-#include <kernel/errno.h>
 #include <kernel/panic.h>
 #include <stdint.h>
 

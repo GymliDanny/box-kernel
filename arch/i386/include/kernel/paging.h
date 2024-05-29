@@ -3,7 +3,6 @@
 
 #include <kernel/asm.h>
 #include <kernel/multiboot.h>
-#include <kernel/data/list.h>
 #include <stdint.h>
 
 #define PD_PRES         0x0001
@@ -26,15 +25,18 @@
 #define PGROUNDUP(size) (((size)+PAGE_SIZE-1) & ~(PAGE_SIZE-1))
 #define PGROUNDDN(size) (((size)) & ~(PAGE_SIZE-1))
 
-int init_page_directory(uintptr_t *pd, int user);
-void enable_paging(uintptr_t pd_addr);
+#define GET_PADDR(x)    (((uint32_t)(x)) - 0xC0000000)
+#define GET_VADDR(x)    (((uint32_t)(x)) + 0xC0000000)
 
+#define GET_PDX(x)      (((uintptr_t)(x) >> 22) & 0x3FF)
+#define GET_PTX(x)      (((uintptr_t)(x) >> 12) & 0x3FF)
+
+uintptr_t* init_page_table(void);
 void paging_init(void);
-void page_fault_handler(struct regs *regs);
-
-uint32_t get_vaddr(uintptr_t paddr);
 
 void map_page(uint32_t *pd, uintptr_t paddr, uintptr_t vaddr, uint32_t flags);
 void unmap_page(uint32_t *pd, uintptr_t vaddr);
+
+void page_fault_handler(struct isr_frame *frame);
 
 #endif

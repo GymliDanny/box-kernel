@@ -2,146 +2,132 @@
 #include <kernel/asm.h>
 #include <kernel/pmem.h>
 #include <kernel/panic.h>
-#include <kernel/errno.h>
-#include <kernel/io.h>
 #include <kernel/syscall.h>
-#include <kernel/string.h>
+#include <libk/io.h>
+#include <libk/string.h>
+#include <libk/errno.h>
 
-static uintptr_t page_directory[1024] __attribute__((aligned(PAGE_SIZE)));
-static uintptr_t first_page_table[1024] __attribute__((aligned(PAGE_SIZE)));
+uintptr_t *kpgdir = NULL;
 
+static uintptr_t kernel_pd[1024] __attribute__((aligned(PAGE_SIZE)));
+static uintptr_t kernel_pt[1024] __attribute__((aligned(PAGE_SIZE)));
+static uintptr_t accnt_pt[1024] __attribute__((aligned(PAGE_SIZE)));
 static int paging_enabled = 0;
 
-int init_page_table(uintptr_t *pd, int index, int user) {
-        if (pd == NULL)
-                return 0;
-
-        uintptr_t paddr = pfa_alloc();
-        if (paddr == PFA_ALLOC_ERR)
-                return -ENOMEM;
-
-        map_page(NULL, paddr, paddr, PD_PRES | PD_RW);
-        if (user)
-                pd[index] = paddr | PD_USR;
-        else
-                pd[index] = paddr;
+void _copy_kernel_maps(uintptr_t *new_pd) {
+        int pdx = GET_PDX(GET_VADDR(KSTART));
+        new_pd[pdx] = GET_PADDR(kernel_pt) | PD_PRES | PD_RW;
+        new_pd[832] = GET_PADDR(accnt_pt) | PD_PRES | PD_RW;
 }
 
-int init_page_directory(uintptr_t *pd, int user) {
-        uintptr_t paddr = pfa_alloc();
-        if (paddr == PFA_ALLOC_ERR)
-                return -ENOMEM;
+uintptr_t* init_page_table(void) {
+        uintptr_t *ret = (uintptr_t*)pfa_alloc();
+        if ((uintptr_t)ret == PFA_ALLOC_ERR)
+                return NULL;
 
-        map_page(NULL, paddr, pd, PD_PRES | PD_RW);
-        for (int i = 0; i < 1023; i++)
-                init_page_table(pd, i, 0);
-        pd[1023] = paddr | 3;
-        return paddr;
+        map_page(NULL, (uintptr_t)ret, (uintptr_t)ret+0x20000000, PD_PRES | PD_RW);
+        memset((char*)ret, 0, PAGE_SIZE);
+        unmap_page(NULL, (uintptr_t)ret);
+        return ret;
 }
 
-static void _alloc_new_page(uint32_t *cr3, uintptr_t vaddr, int user, int rw) {
-        uintptr_t paddr = pfa_alloc();
-        if (paddr == PFA_ALLOC_ERR)
-                panic("Cannot allocate physical page");
+uintptr_t* init_page_directory(void) {
+        uintptr_t *ret = (uintptr_t*)pfa_alloc();
+        if ((uintptr_t)ret == PFA_ALLOC_ERR)
+                return NULL;
 
-        uint32_t flags = PD_PRES;
-        if (rw == 1)
-                flags |= PD_RW;
-        if (user == 1)
-                flags |= PD_USR;
-        map_page(cr3, paddr, vaddr, flags);
+        map_page(NULL, (uintptr_t)ret, (uintptr_t)ret, PD_PRES | PD_RW);
+        memset(ret, 0, PAGE_SIZE);
+        _copy_kernel_maps(ret);
+        unmap_page(NULL, (uintptr_t)ret);
+
+        return ret;
 }
 
 void paging_init(void) {
         if (paging_enabled == 1)
                 return;
-
-        for (int i = 0; i < 1024; i++) {
-                page_directory[i] = PD_RW;
-                first_page_table[i] = PD_RW;
-        }
-
-        page_directory[1023] = ((uintptr_t)&page_directory - 0xC0000000) | 3;
-        page_directory[0] = ((uintptr_t)&first_page_table - 0xC0000000) | 3;
-        page_directory[768] = ((uintptr_t)&first_page_table - 0xC0000000) | 3;
+        
+        _copy_kernel_maps(kernel_pd);
         for (uintptr_t i = KSTART; i < KEND; i += PAGE_SIZE)
-                map_page(page_directory, i, i + 0xC0000000, PD_PRES);
+                map_page(kernel_pd, i, GET_VADDR(i), PD_PRES);
 
-        enable_paging(((uintptr_t)&page_directory) - 0xC0000000);
+        map_page(kernel_pd, 0xB8000, 0xC03FF000, PD_PRES | PD_RW);
+        kpgdir = kernel_pd;
+        enable_paging(GET_PADDR(kpgdir));
         paging_enabled = 1;
-
-        for (int i = 0; i < 1023; i++) {
-                if (i == 0 || i == 768)
-                        continue;
-                init_page_table(page_directory, i, 0);
-        }
         return;
-}
-
-void page_fault_handler(struct regs *regs) {
-        uintptr_t errno = regs->isr_err;
-
-        uintptr_t fault_addr;
-        __asm__ volatile("movl %%cr2, %0" : "=r"(fault_addr));
-        int present = errno & ERR_PRESENT;
-        int rw = errno & ERR_RW;
-        int user = errno & ERR_USER;
-        int reserved = errno & ERR_RESERVED;
-        int ifetch = errno & ERR_INST;
-
-        if (reserved || ifetch)
-                panic("Unknown error in page fault");
-        if (present && user)
-                panic("User process generated protection fault"); // TODO: this shouldn't panic
-        if (present && !user)
-                panic("Kernel process generated protection fault");
-
-        if (user && rw)
-                _alloc_new_page((uint32_t*)regs->cr3, fault_addr, 1, 1);
-        if (user && !rw)
-                _alloc_new_page((uint32_t*)regs->cr3, fault_addr, 1, 0);
-        if (rw)
-                _alloc_new_page((uint32_t*)regs->cr3, fault_addr, 0, 1);
-        if (!rw)
-                _alloc_new_page((uint32_t*)regs->cr3, fault_addr, 0, 0);
-}
-
-uintptr_t get_paddr(uintptr_t vaddr) {
-        uint32_t pdindex = (uint32_t)vaddr >> 22;
-        uint32_t ptindex = (uint32_t)vaddr >> 12 & 0x03FF;
-
-        uint32_t *pd = (uint32_t*)0xFFFFF000;
-        if ((*pd & PD_PRES) != 1)
-                return 0;
-        uint32_t *pt = ((uint32_t*)0xFFC00000) + (0x400 * pdindex);
-        if ((*pt & PD_PRES) != 1)
-                return 0;
-        return (uintptr_t)((pt[ptindex] & ~0xFFF) + ((uint32_t)vaddr & 0xFFF));
 }
 
 void map_page(uint32_t *pd, uintptr_t paddr, uintptr_t vaddr, uint32_t flags) {
         if (pd == NULL)
-                pd = page_directory;
+                pd = kpgdir;
 
         paddr = PGROUNDDN(paddr);
         vaddr = PGROUNDDN(vaddr);
 
-        uintptr_t pdindex = vaddr >> 22;
-        uintptr_t ptindex = vaddr >> 12 & 0x03FF;
+        uintptr_t pdindex = GET_PDX(vaddr);
+        uintptr_t ptindex = GET_PTX(vaddr);
 
-        uintptr_t *pt = (uintptr_t*)((pd[pdindex] + 0xC0000000) & 0xFFFFF000);
+        uintptr_t *pt = (uintptr_t*)(GET_VADDR(pd[pdindex]) & 0xFFFFF000);
+        if (pd[pdindex] == 0)
+                pd[pdindex] = (uintptr_t)init_page_table();
+
         uintptr_t *pte = (uintptr_t*)(&pt[ptindex]);
         *pte |= paddr | (flags & 0xFFF) | 0x01;
+        invlpg((void*)vaddr);
 }
 
 void unmap_page(uint32_t *pd, uintptr_t vaddr) {
         if (pd == NULL)
-                pd = page_directory;
+                pd = kpgdir;
 
-        uintptr_t pdindex = vaddr >> 22;
-        uintptr_t ptindex = vaddr >> 12 & 0x03FF;
+        uintptr_t pdindex = GET_PDX(vaddr);
+        uintptr_t ptindex = GET_PTX(vaddr);
 
-        uintptr_t *pt = (uintptr_t*)((pd[pdindex] + 0xC0000000) & 0xFFFFF000);
+        uintptr_t *pt = (uintptr_t*)(GET_VADDR(pd[pdindex]) & 0xFFFFF000);
+        if (pd[pdindex] == 0)
+                return;
+
         uintptr_t *pte = (uintptr_t*)(&pt[ptindex]);
         *pte &= 0;
+        invlpg((void*)vaddr);
+}
+
+void page_fault_handler(struct isr_frame *frame) {
+        uintptr_t fault_addr;
+        __asm__ volatile("movl %%cr2, %0" : "=r"(fault_addr));
+
+        switch (frame->isr_err) {
+                case 0:
+                        map_page((uintptr_t*)GET_VADDR(frame->cr3), pfa_alloc(), fault_addr, PD_PRES);
+                        break;
+                case 1:
+                        panic("Kernel process caused protection fault on read\n");
+                        break;
+                case 2:
+                        map_page((uintptr_t*)GET_VADDR(frame->cr3), pfa_alloc(), fault_addr, PD_PRES | PD_RW);
+                        break;
+                case 3:
+                        panic("Kernel process caused protection fault on write\n");
+                        break;
+                case 4:
+                        map_page((uintptr_t*)GET_VADDR(frame->cr3), pfa_alloc(), fault_addr, PD_PRES | PD_USR);
+                        break;
+                case 5:
+                        // TODO: instead of panicking, kill process
+                        panic("User process caused protection fault on read\n");
+                        break;
+                case 6:
+                        map_page((uintptr_t*)GET_VADDR(frame->cr3), pfa_alloc(), fault_addr, PD_PRES | PD_RW | PD_USR);
+                        break;
+                case 7:
+                        // TODO: see case 101
+                        panic("USER process caused protection fault on write\n");
+                        break;
+                default:
+                        kprintf("Unknown paging error occured on address %x\n", fault_addr);
+                        panic("Paging error");
+                        break;
+        }
 }

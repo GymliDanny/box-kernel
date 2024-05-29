@@ -25,7 +25,7 @@ uintptr_t pfa_alloc(void) {
         if (ret == NULL)
                 return PFA_ALLOC_ERR;
 
-        struct pfa_page *temp_map = (struct pfa_page*)0x1000;
+        struct pfa_page *temp_map = (struct pfa_page*)0xD0000000;
         map_page(NULL, (uintptr_t)ret, (uintptr_t)temp_map, PD_PRES | PD_RW);
         memset((char*)temp_map, 0, PAGE_SIZE);
         unmap_page(NULL, (uintptr_t)temp_map);

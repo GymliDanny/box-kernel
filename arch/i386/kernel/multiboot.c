@@ -10,6 +10,7 @@
 #include <kernel/video/framebuffer.h>
 #include <libk/io.h>
 #include <libk/string.h>
+#include <libk/kmalloc.h>
 
 extern void kernel_main(char *cmdline);
 extern uintptr_t *kpgdir;
@@ -19,22 +20,20 @@ void i386_entry(uint32_t mboot_magic, struct mboot_info *header, uintptr_t *entr
 
         fb_init();
         if (mboot_magic != MBOOT_LOADER_MAGIC) {
-                kprintf("NOT BOOTED WITH MULTIBOOT BOOTLOADER\n");
-                kprintf("RESET PC!\n");
                 disable_ints();
-                while (1);
+                panic("Not booted with multiboot bootloader");
         }
-        map_page(NULL, (uintptr_t)header, (uintptr_t)GET_VADDR(header), PD_PRES);
+        map_page(NULL, (uintptr_t)header, (uintptr_t)header, PD_PRES);
         if (!(header->flags >> 6 & 0x1)) {
-                kprintf("NO MEMORY MAP FROM BOOTLOADER\n");
-                kprintf("RESET PC!\n");
                 disable_ints();
-                while (1);
+                panic("Physical memory map not provided by bootloader");
         }
 
         struct mboot_info hcopy;
+        char cmdcopy[1024];
         memcpy(&hcopy, header, sizeof(struct mboot_info));
-        unmap_page(NULL, (uintptr_t)header);
+        map_page(NULL, (uintptr_t)header->cmdline, (uintptr_t)header->cmdline, PD_PRES);
+        strcpy(cmdcopy, header->cmdline);
 
         pfa_init(&hcopy);
         paging_init();
@@ -44,8 +43,8 @@ void i386_entry(uint32_t mboot_magic, struct mboot_info *header, uintptr_t *entr
         pic_remap();
         timer_init();
 
-        //enable_ints();
-        kernel_main((char*)header->cmdline);
+        enable_ints();
+        kernel_main(cmdcopy);
 
         while (1);
 }
