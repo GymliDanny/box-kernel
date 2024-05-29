@@ -24,9 +24,10 @@ uintptr_t* init_page_table(void) {
         if ((uintptr_t)ret == PFA_ALLOC_ERR)
                 return NULL;
 
-        map_page(NULL, (uintptr_t)ret, (uintptr_t)ret+0x20000000, PD_PRES | PD_RW);
-        memset((char*)ret, 0, PAGE_SIZE);
-        unmap_page(NULL, (uintptr_t)ret);
+        uintptr_t *temp_map = (uintptr_t*)0xD0001000;
+        map_page(NULL, (uintptr_t)ret, (uintptr_t)temp_map, PD_PRES | PD_RW);
+        memset((char*)temp_map, 0, PAGE_SIZE);
+        unmap_page(NULL, (uintptr_t)temp_map);
         return ret;
 }
 
