@@ -26,8 +26,9 @@
 #define SYS_CLOSE       18
 #define SYS_EXEC        19
 
+#define SYS_HALT        87
 #define SYS_REBOOT      88
 
-int handle_syscall(struct regs *regs);
+int handle_syscall(struct isr_frame *frame);
 
 #endif
