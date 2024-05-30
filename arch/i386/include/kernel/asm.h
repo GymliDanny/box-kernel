@@ -109,6 +109,8 @@ void release_lock(int *lock);
 
 void enable_paging(uint32_t new_cr3);
 
+void flush_gdt(void);
+
 static inline void outb(uint16_t port, uint8_t value) {
         __asm__ volatile("outb %0, %1" : : "a"(value), "Nd"(port));
 }
