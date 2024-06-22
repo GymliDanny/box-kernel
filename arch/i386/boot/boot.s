@@ -78,6 +78,8 @@ _start:
 4:      movl $stack_top, %esp
         and $-16, %esp
 
+        call setup_stack_guard
+
         pushl %ebx
         pushl %eax
         call i386_entry
@@ -85,6 +87,33 @@ _start:
         cli
 1:      hlt
         jmp 1b
+
+.global setup_stack_guard
+.type setup_stack_guard, @function
+setup_stack_guard:
+        pushl %eax
+        pushl %ebx
+        pushl %ecx
+
+        movl $1, %eax
+        movl $0, %ecx
+        cpuid
+        shrl $30, %ecx
+        andl $1, %ecx
+        jnz start_loop
+        jmp fail
+start_loop:
+        rdrand %eax
+        jc done
+        loop start_loop
+fail:
+        movl $-1, %eax
+done:
+        movl %eax, __stack_chk_guard
+        popl %ecx
+        popl %ebx
+        popl %eax
+        ret
 
 .global enable_paging
 .type enable_paging, @function
