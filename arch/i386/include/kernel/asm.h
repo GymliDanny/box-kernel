@@ -4,13 +4,6 @@
 #include <kernel/gdt.h>
 #include <stdint.h>
 
-extern uintptr_t _kernel_start;
-extern uintptr_t _kernel_end;
-#define KSTART          ((uintptr_t)&_kernel_start)
-#define KEND            ((uintptr_t)&_kernel_end - 0xC0000000)
-
-#define PAGE_SIZE       4096
-
 #define PCI_CONFIG_ADDR 0xCF8
 #define PCI_CONFIG_DATA 0xCFC
 
@@ -108,7 +101,6 @@ void aquire_lock(int *lock);
 void release_lock(int *lock);
 
 void enable_paging(uint32_t new_cr3);
-
 void flush_gdt(void);
 
 static inline void outb(uint16_t port, uint8_t value) {
@@ -151,6 +143,10 @@ static inline void disable_ints(void) {
 
 static inline void flush_tss(void) {
         __asm__ volatile("movw $0x28, %ax; ltr %ax");
+}
+
+static inline void flush_tlb(void) {
+        __asm__ volatile("movl %cr3, %eax; movl %eax, %cr3");
 }
 
 static inline void invlpg(void *addr) {
