@@ -9,7 +9,7 @@ ARCH?=i386
 CC:=i686-elf-gcc
 VERSION:="$(shell git describe --abbrev=4 --dirty --always --tags)"
 INCLUDE:=$(INCLUDE)
-CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb -fstack-protector-all -O0
+CFLAGS:=$(CFLAGS) -Wall -Wextra -DVERSION=\"$(VERSION)\" -ggdb -fstack-protector-all
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)
 ARCH:=$(ARCH)
@@ -102,9 +102,9 @@ install-disk: $(KERNEL)
 	mcopy -i a.img vmbox ::vmbox
 
 run: $(KERNEL)
-	qemu-system-i386 -kernel $(KERNEL) -serial stdio -m 3G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh"
+	qemu-system-i386 -kernel $(KERNEL) -serial stdio -m 1G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh"
 
 debug: $(KERNEL)
-	qemu-system-i386 -kernel $(KERNEL) -s -S -m 3G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh" &
+	qemu-system-i386 -kernel $(KERNEL) -s -S -m 1G -drive file=a.img,format=raw -append "root=/dev/sda init=/bin/sh" &
 
 -include $(OBJS:.o=.d)
