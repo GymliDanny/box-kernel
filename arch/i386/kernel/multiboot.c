@@ -7,44 +7,43 @@
 #include <kernel/pmem.h>
 #include <kernel/timer.h>
 #include <kernel/panic.h>
+#include <kernel/vmem.h>
 #include <kernel/video/framebuffer.h>
 #include <libk/io.h>
 #include <libk/string.h>
 #include <libk/kmalloc.h>
 
-extern void kernel_main(char *cmdline);
-extern uintptr_t *kpgdir;
+void kernel_main(char *cmdline);
 
-void i386_entry(uint32_t mboot_magic, struct mboot_info *header, uintptr_t *entry_pd) {
-        kpgdir = entry_pd;
-
+void i386_entry(uint32_t mboot_magic, struct mboot_info *header) {
+        map_page(0xB8000, (uintptr_t)VGA_MEMORY, PD_RW);
         fb_init();
+
         if (mboot_magic != MBOOT_LOADER_MAGIC) {
                 disable_ints();
                 panic("Not booted with multiboot bootloader");
         }
-        map_page(NULL, (uintptr_t)header, (uintptr_t)header, PD_PRES);
+
+        map_page(0x9000, 0x9000, PD_RW);
         if (!(header->flags >> 6 & 0x1)) {
                 disable_ints();
                 panic("Physical memory map not provided by bootloader");
         }
 
-        struct mboot_info hcopy;
-        char cmdcopy[1024];
-        memcpy(&hcopy, header, sizeof(struct mboot_info));
-        map_page(NULL, (uintptr_t)header->cmdline, (uintptr_t)header->cmdline, PD_PRES);
-        strcpy(cmdcopy, header->cmdline);
-
-        pfa_init(&hcopy);
-        paging_init();
-        kmalloc_init();
+        char cmdline[4096];
+        map_page(header->cmdline, PAGE_TMP_MAP, 0);
+        memcpy(cmdline, (char*)PAGE_TMP_MAP, strlen((char*)PAGE_TMP_MAP));
+        unmap_page(PAGE_TMP_MAP);
+        pfa_init(header);
         gdt_install();
         idt_install();
+        paging_init();
+        map_page(0xB8000, (uintptr_t)VGA_MEMORY, PD_RW);
         pic_remap();
         timer_init();
 
         enable_ints();
-        kernel_main(cmdcopy);
+        kernel_main(cmdline);
 
         while (1);
 }
