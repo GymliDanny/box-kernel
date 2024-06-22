@@ -53,6 +53,6 @@ void gdt_install(void) {
         __asm__ volatile("movl %%esp, %0" : "=r"(esp));
         write_tss(5, 0x10, esp);
 
-        flush_gdt(&gp);
+        flush_gdt();
         flush_tss();
 }
