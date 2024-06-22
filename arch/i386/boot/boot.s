@@ -19,14 +19,16 @@ stack_top:
         .align 4096
 boot_page_directory:
         .skip 4096
-boot_page_tables:
-        .skip 20480
+boot_page_table0:
+        .skip 4096
+boot_page_table1:
+        .skip 4096
 
 .section .multiboot.text, "a"
 .global _start
 .type _start, @function
 _start:
-        movl $(boot_page_tables - 0xC0000000), %edi
+        movl $(boot_page_table0 - 0xC0000000), %edi
         movl $0, %esi
         movl $1023, %ecx
 
@@ -43,13 +45,22 @@ _start:
         addl $4, %edi
         loop 1b
 
-3:      movl $0xB8003, boot_page_tables - 0xC0000000 + 1023 * 4
 
-        movl $boot_page_tables, %ecx
+3:      movl $boot_page_directory, %ecx
+        subl $0xC0000000, %ecx
+        orl $0x003, %ecx
+        movl %ecx, boot_page_directory - 0xC0000000 + 1023 * 4
+
+        movl $boot_page_table0, %ecx
         subl $0xC0000000, %ecx
         orl $0x003, %ecx
         movl %ecx, boot_page_directory - 0xC0000000
-        movl %ecx, boot_page_directory - 0xC0000000 + 4 * 768
+        movl %ecx, boot_page_directory - 0xC0000000 + 768 * 4
+
+        movl $boot_page_table1, %ecx
+        subl $0xC0000000, %ecx
+        orl $0x003, %ecx
+        movl %ecx, boot_page_directory - 0xC0000000 + 1022 * 4
 
         movl $boot_page_directory, %ecx
         subl $0xC0000000, %ecx
@@ -64,13 +75,9 @@ _start:
 
 .section .text
 
-4:      movl %cr3, %ecx
-        movl %ecx, %cr3
-
-        movl $stack_top, %esp
+4:      movl $stack_top, %esp
         and $-16, %esp
 
-        pushl $boot_page_directory
         pushl %ebx
         pushl %eax
         call i386_entry
