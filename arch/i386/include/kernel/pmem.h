@@ -3,8 +3,7 @@
 
 #include <kernel/multiboot.h>
 #include <stdint.h>
-
-#define PFA_ALLOC_ERR   0xFFFFFFFF
+#include <stddef.h>
 
 struct pfa_page {
         struct pfa_page *next;
@@ -12,8 +11,7 @@ struct pfa_page {
 
 void pfa_init(struct mboot_info *header);
 
-uintptr_t pfa_alloc(void);
-void pfa_free(uintptr_t paddr);
-void pfa_free_range(uintptr_t start, uintptr_t end);
+void pfa_free_dma(uintptr_t paddr, size_t num_pages);
+void pfa_free(uintptr_t paddr, size_t num_pages);
 
 #endif
