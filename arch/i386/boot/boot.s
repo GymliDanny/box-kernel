@@ -80,6 +80,7 @@ _start:
 
         call setup_stack_guard
 
+        xorl %ebp, %ebp
         pushl %ebx
         pushl %eax
         call i386_entry
