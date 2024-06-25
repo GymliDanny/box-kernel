@@ -29,6 +29,6 @@
 #define SYS_HALT        87
 #define SYS_REBOOT      88
 
-int handle_syscall(struct isr_frame *frame);
+void handle_syscall(struct isr_frame *frame);
 
 #endif

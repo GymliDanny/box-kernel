@@ -1,4 +1,5 @@
 #include <kernel/idt.h>
+#include <kernel/interrupt.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
 #include <kernel/gdt.h>
@@ -67,20 +68,10 @@ void exception_handler(struct isr_frame *frame) {
         }
 }
 
-void interrupt_handler(struct isr_frame frame) {
-        if (frame.isr_vector < 32) {
-                exception_handler(&frame);
-        } else if (frame.isr_vector < 48) {
-                irq_dispatch(&frame);
-        } else {
-                switch (frame.isr_vector) {
-                        case 0x80:
-                                handle_syscall(&frame);
-                                break;
-                        default:
-                                panic("Unmapped interrupt");
-                }
-        }
+void generic_handler(struct isr_frame *frame) {
+        kprintf("No handler registered for IRQ %d\n", frame->isr_vector);
+        if (frame->isr_vector > 32 && frame->isr_vector < 48)
+                pic_eoi(frame->isr_vector-32);
 }
 
 void idt_set_gate(uint8_t num, void (*handler)(void), uint16_t cs, uint8_t flags) {
@@ -95,6 +86,12 @@ void idt_set_gate(uint8_t num, void (*handler)(void), uint16_t cs, uint8_t flags
 void idt_install(void) {
         idtr.limit = (uint16_t)sizeof(struct idt_entry) * 256 - 1;
         idtr.base = (uint32_t)idt;
+
+        for (int i = 0; i < 32; i++)
+                register_isr_handler(i, exception_handler);
+        for (int i = 32; i < 224; i++)
+                register_isr_handler(i, generic_handler);
+        register_isr_handler(0x80, handle_syscall);
 
         idt_set_gate(0x0, isr_stub_0, 0x08, IDT_EXCEPTION);
         idt_set_gate(0x1, isr_stub_1, 0x08, IDT_EXCEPTION);
@@ -146,7 +143,7 @@ void idt_install(void) {
         idt_set_gate(0x2E, irq_stub_14, 0x08, IDT_INTERRUPT);
         idt_set_gate(0x2F, irq_stub_15, 0x08, IDT_INTERRUPT);
 
-        idt_set_gate(0x80, syscall_stub, 0x08, IDT_INTERRUPT);
+        idt_set_gate(0x80, isr_stub_128, 0x08, IDT_INTERRUPT);
 
         __asm__ volatile("lidt %0" : : "memory"(idtr));
 }

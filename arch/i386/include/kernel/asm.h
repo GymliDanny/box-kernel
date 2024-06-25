@@ -9,6 +9,8 @@
 
 #define COM_PORT        0x3F8
 
+#define MAX_ISR         256
+
 struct regs {
         uint32_t eax;
         uint32_t ebx;
@@ -95,7 +97,7 @@ void irq_stub_13(void);
 void irq_stub_14(void);
 void irq_stub_15(void);
 
-void syscall_stub(void);
+void isr_stub_128(void);
 
 void aquire_lock(int *lock);
 void release_lock(int *lock);

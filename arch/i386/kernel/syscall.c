@@ -10,7 +10,7 @@ void sys_read(struct isr_frame *frame) {
 void sys_write(struct isr_frame *frame) {
 }
 
-int handle_syscall(struct isr_frame *frame) {
+void handle_syscall(struct isr_frame *frame) {
         switch (frame->eax) {
                 case SYS_READ:
                         sys_read(frame);
