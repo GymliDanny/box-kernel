@@ -20,10 +20,13 @@ void paging_init(void) {
                 pt[GET_PTX(GET_VADDR(i))] = i | PD_PRES;
         unmap_page(PAGE_TMP_MAP);
 
+        uintptr_t temp_pt = pfa_alloc(1);
+
         uintptr_t phys_pd = pfa_alloc(1);
         map_page(phys_pd, PAGE_TMP_MAP, PD_PRES | PD_RW);
         uintptr_t *pd = (uintptr_t*)PAGE_TMP_MAP;
         pd[GET_PDX(GET_VADDR(KSTART))] = phys_pt | PD_PRES | PD_RW;
+        pd[GET_PDX(PAGE_TMP_MAP)] = temp_pt | PD_PRES | PD_RW;
         pd[1023] = phys_pd | PD_PRES | PD_RW;
         unmap_page(PAGE_TMP_MAP);
 
