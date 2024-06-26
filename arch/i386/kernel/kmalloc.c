@@ -37,9 +37,9 @@ void* kmalloc(size_t sz) {
 
         struct mem_block *temp = first;
         while (temp->next != NULL) {
-                if (temp->size <= sz && temp->alloc == 0) {
-                        temp->alloc = 1;
-                        return (void*)temp->start;
+                if (temp->next->size <= sz && temp->next->alloc == 0) {
+                        temp->next->alloc = 1;
+                        return (void*)temp->next->start;
                 }
                 temp = temp->next;
         }
@@ -48,11 +48,10 @@ void* kmalloc(size_t sz) {
         if (temp->next > kbrk)
                 _request_page();
         temp->next->prev = temp;
-        temp = temp->next;
-        temp->start = (uintptr_t)(temp + sizeof(struct mem_block));
-        temp->size = sz;
-        temp->alloc = 1;
-        temp->next = NULL;
+        temp->next->start = (uintptr_t)(temp->next + sizeof(struct mem_block));
+        temp->next->size = sz;
+        temp->next->alloc = 1;
+        temp->next->next = NULL;
         return (void*)temp->start;
 }
 
