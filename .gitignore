@@ -1,7 +1,6 @@
 # Normal rules
 .*
 *.a
-*.bin
 *.bz2
 *.c.*
 *.d
@@ -21,14 +20,40 @@
 *.xz
 *.zst
 
-# Top-level files
-/vmbox
-/a.img
-/bochsrc
-/debug.log
+# Built exec's
+bin/cat/cat
+bin/chmod/chmod
+bin/chown/chown
+bin/cp/cp
+bin/date/date
+bin/echo/echo
+bin/kill/kill
+bin/login/login
+bin/ls/ls
+bin/man/man
+bin/mv/mv
+bin/ps/ps
+bin/pwd/pwd
+bin/sh/sh
+bin/su/su
+bin/touch/touch
+kernel/vmbox
+sbin/init/init
+sbin/mknod/mknod
+sbin/mount/mount
+sbin/nologin/nologin
+sbin/shutdown/shutdown
+sbin/umount/umount
+usr.sbin/bxpkg/bxpkg
+usr.sbin/cron/cron
+usr.sbin/gfdisk/gfdisk
+usr.sbin/mkfs.fat/mkfs.fat
+usr.sbin/useradd/useradd
+usr.sbin/usermod/usermod
 
-# Image generation files
-/img/
+# Built libs
+lib/libc/libc.so
+lib/libm/libm.so
 
 # Don't ignore these!
 !.gitattributes
